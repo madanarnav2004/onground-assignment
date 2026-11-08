@@ -18,7 +18,7 @@ Current integration is LOCAL ONLY and binds to loopback. Hosted calling requires
 
 - API key created with Arnav's permission; local save must be verified.
 - Account shows $5 balance, no linked phone numbers on 8 Nov 2026.
-- Need dedicated assignment agent, verified caller number, duration limit, retry settings and summary enabled.
+- Need dedicated assignment agent, usable shared/default or linked caller number, verified recipient where required, duration limit, retry settings and summary enabled. An empty My Numbers page alone does not establish that calling is blocked: Bolna documents shared/default numbers at https://www.bolna.ai/ai-outbound-calling . Check availability before buying or linking a number.
 - No real phone call has been demonstrated yet.
 
 API references: https://www.bolna.ai/docs/api-reference/calls/make and https://www.bolna.ai/docs/api-reference/executions/get_execution . Product research and review checkpoints: `docs/PRODUCT.md`; proposed agent script: `docs/AGENT_PROMPT.md`.
