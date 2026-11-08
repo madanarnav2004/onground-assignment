@@ -1,14 +1,113 @@
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { CallingService } from '../server/calling.mjs';
-const env={BOLNA_API_KEY:'test-secret',BOLNA_AGENT_ID:'test-agent',TEST_PHONE_NUMBER:'+919999999999',CALLING_ENABLED:'true',MAX_TEST_CALLS:'2'};
-const execution='123e4567-e89b-12d3-a456-426614174000';
-function setup(t,fetcher,overrides={}){const directory=mkdtempSync(join(tmpdir(),'og-call-'));t.after(()=>rmSync(directory,{recursive:true,force:true}));return new CallingService({env:{...env,...overrides},directory,fetcher});}
-test('calling stays off without credentials or explicit enablement',async t=>{let requests=0;const s=setup(t,()=>{requests++;},{CALLING_ENABLED:'false'});await assert.rejects(s.start('request-number-0001'),/not configured/);assert.equal(requests,0);});
-test('double click and restart reuse the persisted call; destination is server-owned',async t=>{let requests=0;const s=setup(t,async(url,init)=>{requests++;assert.equal(JSON.parse(init.body).recipient_phone_number,env.TEST_PHONE_NUMBER);return new Response(JSON.stringify({execution_id:execution,status:'queued'}));});const first=await s.start('request-number-0001');await s.start('request-number-0001');await assert.rejects(s.start('request-number-0002'),/active or uncertain/);const second=new CallingService({env,directory:s.path.replace('/calls.json',''),fetcher:s.fetcher});assert.equal((await second.start('request-number-0001')).id,first.id);assert.equal(requests,1);});
-test('lost provider response stays uncertain and blocks redial after restart',async t=>{let requests=0;const s=setup(t,async()=>{requests++;throw new Error('lost response');});assert.equal((await s.start('request-number-0001')).status,'unknown');await assert.rejects(s.start('request-number-0002'),/active or uncertain/);assert.equal(requests,1);});
-test('line disconnection does not expose unfinished results; completed returns provider evidence',async t=>{let phase=0;const s=setup(t,async(_url,init)=>new Response(JSON.stringify(init.method==='POST'?{execution_id:execution}:{status:phase++?'completed':'call-disconnected',conversation_duration:45,total_cost:5,summary:'Callback requested',transcript:'Customer: Tomorrow, please.'})));const call=await s.start('request-number-0001');await s.refresh(call.id);assert.equal(call.summary,undefined);assert.equal(call.status,'call-disconnected');await s.refresh(call.id);assert.equal(call.summary,'Callback requested');assert.equal(call.duration,45);assert.equal(call.status,'completed');});
-test('test cap stops more paid attempts',async t=>{const s=setup(t,async(_url,init)=>new Response(JSON.stringify(init.method==='POST'?{execution_id:execution}:{status:'completed'})),{MAX_TEST_CALLS:'1'});const call=await s.start('request-number-0001');await s.refresh(call.id);await assert.rejects(s.start('request-number-0002'),/limit reached/);});
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { CallingService } from "../server/calling.mjs";
+const env = {
+  BOLNA_API_KEY: "test-secret",
+  BOLNA_AGENT_ID: "test-agent",
+  TEST_PHONE_NUMBER: "+919999999999",
+  CALLING_ENABLED: "true",
+  MAX_TEST_CALLS: "2",
+};
+const execution = "123e4567-e89b-12d3-a456-426614174000";
+function setup(t, fetcher, overrides = {}) {
+  const directory = mkdtempSync(join(tmpdir(), "og-call-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  return new CallingService({
+    env: { ...env, ...overrides },
+    directory,
+    fetcher,
+  });
+}
+test("calling stays off without credentials or explicit enablement", async (t) => {
+  let requests = 0;
+  const s = setup(
+    t,
+    () => {
+      requests++;
+    },
+    { CALLING_ENABLED: "false" },
+  );
+  await assert.rejects(s.start("request-number-0001"), /not configured/);
+  assert.equal(requests, 0);
+});
+test("double click and restart reuse the persisted call; destination is server-owned", async (t) => {
+  let requests = 0;
+  const s = setup(t, async (url, init) => {
+    requests++;
+    assert.equal(
+      JSON.parse(init.body).recipient_phone_number,
+      env.TEST_PHONE_NUMBER,
+    );
+    return new Response(
+      JSON.stringify({ execution_id: execution, status: "queued" }),
+    );
+  });
+  const first = await s.start("request-number-0001");
+  await s.start("request-number-0001");
+  await assert.rejects(s.start("request-number-0002"), /active or uncertain/);
+  const second = new CallingService({
+    env,
+    directory: s.path.replace("/calls.json", ""),
+    fetcher: s.fetcher,
+  });
+  assert.equal((await second.start("request-number-0001")).id, first.id);
+  assert.equal(requests, 1);
+});
+test("lost provider response stays uncertain and blocks redial after restart", async (t) => {
+  let requests = 0;
+  const s = setup(t, async () => {
+    requests++;
+    throw new Error("lost response");
+  });
+  assert.equal((await s.start("request-number-0001")).status, "unknown");
+  await assert.rejects(s.start("request-number-0002"), /active or uncertain/);
+  assert.equal(requests, 1);
+});
+test("line disconnection does not expose unfinished results; completed returns provider evidence", async (t) => {
+  let phase = 0;
+  const s = setup(
+    t,
+    async (_url, init) =>
+      new Response(
+        JSON.stringify(
+          init.method === "POST"
+            ? { execution_id: execution }
+            : {
+                status: phase++ ? "completed" : "call-disconnected",
+                conversation_duration: 45,
+                total_cost: 5,
+                summary: "Callback requested",
+                transcript: "Customer: Tomorrow, please.",
+              },
+        ),
+      ),
+  );
+  const call = await s.start("request-number-0001");
+  await s.refresh(call.id);
+  assert.equal(call.summary, undefined);
+  assert.equal(call.status, "call-disconnected");
+  await s.refresh(call.id);
+  assert.equal(call.summary, "Callback requested");
+  assert.equal(call.duration, 45);
+  assert.equal(call.status, "completed");
+});
+test("test cap stops more paid attempts", async (t) => {
+  const s = setup(
+    t,
+    async (_url, init) =>
+      new Response(
+        JSON.stringify(
+          init.method === "POST"
+            ? { execution_id: execution }
+            : { status: "completed" },
+        ),
+      ),
+    { MAX_TEST_CALLS: "1" },
+  );
+  const call = await s.start("request-number-0001");
+  await s.refresh(call.id);
+  await assert.rejects(s.start("request-number-0002"), /limit reached/);
+});

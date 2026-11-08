@@ -1,0 +1,21 @@
+{
+  "verified_at": "2026-11-08",
+  "provider": "Bolna",
+  "call_origin": "Assignment app server POST /call",
+  "execution_id": "045b0b0f-0588-4e43-9302-ba6160a726bb",
+  "status": "completed",
+  "duration_seconds": 88,
+  "reported_cost_us_cents": 9,
+  "termination_reason": "user_hung_up",
+  "participant": "Authorized user roleplaying sample shopper; number omitted",
+  "language_demonstrated": "Hindi with English retail terms",
+  "observed_outcome": "Customer stated a 10000 INR budget and requested Hindi callback on 9 November 2026 at 10:00 IST; store confirmation pending",
+  "human_feedback": "Arnav: Natural enough; continue to screens",
+  "not_established": [
+    "Independent customer testing",
+    "English or regional-language switching quality",
+    "Conversion uplift",
+    "Human-to-human calling",
+    "Hosted acceptance"
+  ]
+}

@@ -32,9 +32,9 @@ Sample shopper Mukunda tried a mattress and left undecided. AI identifies itself
 3. Review dashboard → lead → call → outcome flow against mock before expanding.
 4. Required-screen pass, then two-minute evidence-led demo and README review.
 
-## Required screens still to build
+## Required screens · implemented locally
 
-Sidebar/topbar, dashboard, Plan outgoing/incoming/recent, calendar, Pulse home/channel, leads modal with paging. The current calling proof page is temporary development UI, not the reference-screen implementation.
+Sidebar/topbar, dashboard, Plan outgoing/incoming/recent, calendar, Pulse home/channel, leads modal with paging. The standalone calling proof remains at /proof. See verification/manual-review.md for observed checks and limits.
 
 ## Success and failure tests
 

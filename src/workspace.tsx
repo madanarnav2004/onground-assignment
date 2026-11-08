@@ -1,0 +1,1685 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  Activity,
+  ArrowDownLeft,
+  ArrowRight,
+  ArrowUpRight,
+  BarChart3,
+  Bell,
+  CalendarDays,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Hash,
+  Headphones,
+  LayoutDashboard,
+  MessageSquare,
+  Phone,
+  PhoneIncoming,
+  PhoneMissed,
+  Search,
+  Send,
+  Sparkles,
+  Target,
+  Trophy,
+  Users,
+  X,
+} from "lucide-react";
+import {
+  leads,
+  money,
+  terminal,
+  callLabels,
+  type Lead,
+  type Call,
+} from "./data";
+import { useCalls } from "./useCalls";
+
+type Page =
+  "Dashboard" | "Calls to make" | "Incoming" | "Recent" | "Calendar" | "Pulse";
+type Followup = {
+  id: string;
+  name: string;
+  date: string;
+  time: string;
+  language: string;
+  note: string;
+};
+type Message = { author: string; text: string; time: string; mine?: boolean };
+function stored<T>(key: string, fallback: T): T {
+  try {
+    return JSON.parse(localStorage.getItem(key) || "null") ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+function useLocal<T>(key: string, fallback: T) {
+  const [v, set] = useState<T>(() => stored(key, fallback));
+  useEffect(() => {
+    localStorage.setItem(key, JSON.stringify(v));
+  }, [key, v]);
+  return [v, set] as const;
+}
+function Avatar({ lead }: { lead: Lead }) {
+  return <span className="og-avatar">{lead.initials}</span>;
+}
+function Dialog({
+  title,
+  children,
+  onClose,
+  wide = false,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+  wide?: boolean;
+}) {
+  const ref = useRef<HTMLDivElement>(null),
+    closeRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    const previous = document.activeElement as HTMLElement;
+    closeRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "Tab") {
+        const list = Array.from(
+          ref.current?.querySelectorAll<HTMLElement>(
+            "button:not([disabled]),input,textarea,select,a[href]",
+          ) || [],
+        );
+        const first = list[0],
+          last = list[list.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+      previous?.focus();
+    };
+  }, []);
+  return (
+    <div
+      className="og-overlay"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={ref}
+        className={"og-dialog " + (wide ? "wide" : "")}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+      >
+        <div className="og-dialog-head">
+          <div>
+            <span className="og-overline">ON-GROUND · CALL CENTRE</span>
+            <h2>{title}</h2>
+          </div>
+          <button
+            ref={closeRef}
+            className="og-icon"
+            aria-label="Close dialog"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+const initialMessages: Message[] = [
+  {
+    author: "Sunita Rao",
+    text: "Team, let’s close the loop on yesterday’s walk-ins. A clear next step is more useful than another unanswered call.",
+    time: "9:05 am",
+  },
+  {
+    author: "AvaniBot",
+    text: "Three leads need a follow-up today. Check their preferred language and last conversation before calling.",
+    time: "9:06 am",
+  },
+  {
+    author: "You",
+    text: "I’ll start with the customers who asked us to call back.",
+    time: "9:08 am",
+    mine: true,
+  },
+];
+export function Workspace() {
+  const [page, setPage] = useState<Page>("Dashboard"),
+    [leadIdx, setLeadIdx] = useState<number | null>(null),
+    [expanded, setExpanded] = useState<string | null>(null),
+    [queuePage, setQueuePage] = useState(0),
+    [query, setQuery] = useState(""),
+    [period, setPeriod] = useState("This Week");
+  const [callOpen, setCallOpen] = useState(false),
+    [review, setReview] = useState<Call | null>(null),
+    [sampleReview, setSampleReview] = useState<Lead | null>(null),
+    [callback, setCallback] = useState<Lead | null>(null),
+    [notice, setNotice] = useState(""),
+    [channel, setChannel] = useState<string | null>(null);
+  const [messages, setMessages] = useLocal<Record<string, Message[]>>(
+      "og-messages-v1",
+      {},
+    ),
+    [responses, setResponses] = useLocal<Record<string, string>>(
+      "og-responses-v1",
+      {},
+    ),
+    [followups, setFollowups] = useLocal<Followup[]>("og-followups-v1", []);
+  const [reply, setReply] = useState(""),
+    [chat, setChat] = useState(""),
+    [callbackDate, setCallbackDate] = useState("2026-11-09"),
+    [callbackTime, setCallbackTime] = useState("10:00"),
+    [callbackNote, setCallbackNote] = useState(""),
+    [callbackLanguage, setCallbackLanguage] = useState("Hindi");
+  const [month, setMonth] = useState(new Date(2026, 10, 1)),
+    [day, setDay] = useState(8),
+    [kudos, setKudos] = useState(false);
+  const voice = useCalls();
+  const selectedLead = leadIdx === null ? null : leads[leadIdx];
+  const filtered = leads
+    .filter((l) =>
+      [l.name, l.product, l.stage]
+        .join(" ")
+        .toLowerCase()
+        .includes(query.toLowerCase()),
+    )
+    .sort((a, b) => b.intent - a.intent);
+  const queue = filtered.slice(queuePage * 3, queuePage * 3 + 3);
+  const liveCount = voice.calls.filter((c) => c.status === "completed").length;
+  useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 4500);
+    return () => clearTimeout(timer);
+  }, [notice]);
+  function go(p: Page) {
+    setPage(p);
+    setChannel(null);
+    setQuery("");
+    setQueuePage(0);
+  }
+  function openCallback(l: Lead) {
+    setCallback(l);
+    setCallbackLanguage(l.language);
+    setCallbackNote("");
+  }
+  function saveFollowup() {
+    if (!callback || !callbackDate || !callbackTime) return;
+    setFollowups((rows) => [
+      ...rows,
+      {
+        id: crypto.randomUUID(),
+        name: callback.name,
+        date: callbackDate,
+        time: callbackTime,
+        language: callbackLanguage,
+        note: callbackNote,
+      },
+    ]);
+    setCallback(null);
+    setNotice(
+      "Callback request added to your local plan. Store confirmation is pending.",
+    );
+  }
+  function sendMessage() {
+    if (!chat.trim() || !channel) return;
+    const msg = {
+      author: "You",
+      text: chat.trim(),
+      time: new Date().toLocaleTimeString("en-IN", {
+        hour: "numeric",
+        minute: "2-digit",
+      }),
+      mine: true,
+    };
+    setMessages((all) => ({
+      ...all,
+      [channel]: [...(all[channel] || initialMessages), msg],
+    }));
+    setChat("");
+  }
+  function answer(text: string) {
+    if (!channel || !text.trim()) return;
+    setResponses((v) => ({ ...v, [channel]: text.trim() }));
+    setReply("");
+    setNotice("Your response is saved in this demo workspace.");
+  }
+  const nav = [
+    { page: "Dashboard" as Page, icon: LayoutDashboard },
+    { page: "Calls to make" as Page, icon: Phone },
+    { page: "Incoming" as Page, icon: PhoneIncoming },
+    { page: "Recent" as Page, icon: Clock },
+    { page: "Calendar" as Page, icon: CalendarDays },
+    { page: "Pulse" as Page, icon: MessageSquare },
+  ];
+  function chart(title: string, values: number[], color: string, suffix = "") {
+    return (
+      <section className="og-chart og-card">
+        <div className="og-section-title">
+          {title}
+          <span>LAST 7 DAYS · SAMPLE</span>
+        </div>
+        <div className="og-bars">
+          {values.map((v, i) => (
+            <div key={i}>
+              <span>
+                {v}
+                {suffix}
+              </span>
+              <div className="og-bar-track">
+                <div
+                  style={{
+                    height: (v / Math.max(...values)) * 100 + "%",
+                    background: color,
+                  }}
+                />
+              </div>
+              <small>
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"][i]}
+              </small>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+  function calendar() {
+    const first = new Date(month.getFullYear(), month.getMonth(), 1).getDay(),
+      count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    const dateKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const items = followups.filter((f) => f.date === dateKey);
+    return (
+      <div className="og-calendar-wrap">
+        <section className="og-card og-calendar">
+          <div className="og-calendar-nav">
+            <button
+              className="og-icon"
+              aria-label="Previous month"
+              onClick={() => {
+                setMonth(
+                  new Date(month.getFullYear(), month.getMonth() - 1, 1),
+                );
+                setDay(1);
+              }}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <h2>
+              {month.toLocaleDateString("en-IN", {
+                month: "long",
+                year: "numeric",
+              })}
+            </h2>
+            <button
+              className="og-icon"
+              aria-label="Next month"
+              onClick={() => {
+                setMonth(
+                  new Date(month.getFullYear(), month.getMonth() + 1, 1),
+                );
+                setDay(1);
+              }}
+            >
+              <ChevronRight size={18} />
+            </button>
+            <button
+              className="og-secondary"
+              onClick={() => {
+                setMonth(new Date(2026, 10, 1));
+                setDay(8);
+              }}
+            >
+              Today
+            </button>
+          </div>
+          <div className="og-calendar-grid">
+            {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"].map((d) => (
+              <span className="og-weekday" key={d}>
+                {d}
+              </span>
+            ))}
+            {Array.from({ length: first }, (_, i) => (
+              <div key={"empty" + i} />
+            ))}
+            {Array.from({ length: count }, (_, i) => {
+              const n = i + 1;
+              const has =
+                followups.some(
+                  (f) =>
+                    f.date ===
+                    `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(n).padStart(2, "0")}`,
+                ) ||
+                (month.getMonth() === 10 && [9, 12, 18, 23].includes(n));
+              return (
+                <button
+                  key={n}
+                  className={
+                    (day === n ? "selected " : "") +
+                    (n === 8 &&
+                    month.getMonth() === 10 &&
+                    month.getFullYear() === 2026
+                      ? "today"
+                      : "")
+                  }
+                  aria-label={`Select ${n} ${month.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}`}
+                  onClick={() => setDay(n)}
+                >
+                  {n}
+                  {has && <span className="og-event-dot" />}
+                </button>
+              );
+            })}
+          </div>
+        </section>
+        <section className="og-card og-agenda">
+          <span className="og-overline">YOUR DAY</span>
+          <h2>
+            {day} {month.toLocaleDateString("en-IN", { month: "long" })}
+          </h2>
+          {items.map((f) => (
+            <div className="og-agenda-item" key={f.id}>
+              <span>{f.time} IST</span>
+              <strong>{f.name} · callback request</strong>
+              <p>{f.language} · awaiting confirmation</p>
+              {f.note && <p>{f.note}</p>}
+            </div>
+          ))}
+          {month.getMonth() === 10 && [9, 12, 18, 23].includes(day) && (
+            <div className="og-agenda-item">
+              <span>4:30 pm IST · sample event</span>
+              <strong>Team coaching</strong>
+              <p>Objection handling with Sunita Rao</p>
+            </div>
+          )}
+          {!items.length && ![9, 12, 18, 23].includes(day) && (
+            <p className="og-muted">No events for this date.</p>
+          )}
+          <p className="og-footnote">
+            Local demo calendar. Mailbox syncing is not connected.
+          </p>
+        </section>
+      </div>
+    );
+  }
+  return (
+    <div className="og-app">
+      <aside className="og-sidebar">
+        <div className="og-logo">
+          <span>OG</span>On-Ground.ai
+        </div>
+        <div className="og-side-nav">
+          {nav.map((n, i) => (
+            <div key={n.page}>
+              {i === 1 && <div className="og-nav-group">PLAN</div>}
+              {i === 4 && <div className="og-nav-space" />}
+              <button
+                className={page === n.page ? "selected" : ""}
+                onClick={() => go(n.page)}
+              >
+                <n.icon size={16} />
+                {n.page}
+                {n.page === "Incoming" && <small>5</small>}
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="og-side-bottom">
+          <span className="og-status-dot" /> On queue
+          <div className="og-side-profile">
+            <span className="og-avatar">AM</span>
+            <div>
+              <strong>Arnav Madan</strong>
+              <small>Call centre agent</small>
+            </div>
+          </div>
+        </div>
+      </aside>
+      <nav className="og-mobile-nav" aria-label="Main navigation">
+        {nav.map((n) => (
+          <button
+            className={page === n.page ? "selected" : ""}
+            key={n.page}
+            onClick={() => go(n.page)}
+          >
+            <n.icon size={16} />
+            <span>{n.page === "Calls to make" ? "Calls" : n.page}</span>
+          </button>
+        ))}
+      </nav>
+      <div className="og-workspace">
+        <header className="og-topbar">
+          <div>
+            <Headphones size={15} />
+            <strong>On-Ground.ai</strong>
+            <span>/</span>
+            <span>Call Centre</span>
+          </div>
+          <div>
+            <span className="og-top-store">Koramangala · Retail demo</span>
+            <button
+              className="og-icon"
+              aria-label="View notifications"
+              onClick={() =>
+                setNotice(
+                  `${followups.length} callback requests awaiting confirmation. ${liveCount} live test call completed.`,
+                )
+              }
+            >
+              <Bell size={17} />
+              <span className="og-notification-dot" />
+            </button>
+            <button
+              className="og-top-score"
+              onClick={() =>
+                setNotice(
+                  "OG Score 76 is sample dashboard data, not a score generated from your test call.",
+                )
+              }
+            >
+              <Target size={14} />
+              76
+            </button>
+            <button className="og-top-score" onClick={() => setKudos(true)}>
+              <Trophy size={14} />
+              #3
+            </button>
+            <span className="og-avatar small">AM</span>
+          </div>
+        </header>
+        <main className="og-main">
+          <div
+            className={"og-page-banner " + (page === "Pulse" ? "purple" : "")}
+          >
+            <div>
+              <span>
+                {page === "Dashboard"
+                  ? "Good afternoon"
+                  : page === "Pulse"
+                    ? "THE TEAM BEHIND EVERY CONVERSATION"
+                    : "YOUR DAY, IN FOCUS"}
+              </span>
+              <h1>
+                {page === "Dashboard"
+                  ? "Arnav Madan"
+                  : page === "Calls to make" ||
+                      page === "Incoming" ||
+                      page === "Recent"
+                    ? "Today’s calling plan"
+                    : page === "Pulse"
+                      ? "Pulse"
+                      : "Calendar"}
+              </h1>
+              <p>
+                {page === "Dashboard"
+                  ? "The Sleep Company · Call Centre"
+                  : page === "Pulse"
+                    ? "The Sleep Company · Koramangala"
+                    : page === "Calendar"
+                      ? "Store visits, coaching and callback requests"
+                      : page === "Calls to make"
+                        ? "Start with the people most ready for a useful next step."
+                        : page === "Incoming"
+                          ? "Return missed calls while the conversation is still fresh."
+                          : "Every call leaves context for the next conversation."}
+              </p>
+            </div>
+            {page === "Dashboard" ? (
+              <label className="og-period">
+                <CalendarDays size={13} />
+                <select
+                  value={period}
+                  onChange={(e) => setPeriod(e.target.value)}
+                >
+                  <option>Today</option>
+                  <option>This Week</option>
+                  <option>This Month</option>
+                </select>
+              </label>
+            ) : (
+              <span className="og-badge light">8 NOV 2026</span>
+            )}
+          </div>
+          {page === "Dashboard" && (
+            <>
+              <div className="og-kpis">
+                {[
+                  {
+                    label: "OG Score™",
+                    value: "76",
+                    delta: "↑ 13 points",
+                    icon: Target,
+                  },
+                  {
+                    label: "Avg handle time",
+                    value: "4m 12s",
+                    delta: "↓ 8% this week",
+                    icon: Clock,
+                  },
+                  {
+                    label: "CSAT today",
+                    value: "94%",
+                    delta: "↑ 2 points",
+                    icon: Activity,
+                  },
+                  {
+                    label: "In queue",
+                    value: "2",
+                    delta: "Waiting for you",
+                    icon: Users,
+                  },
+                ].map((k) => (
+                  <div className="og-kpi" key={k.label}>
+                    <div>
+                      {k.label}
+                      <k.icon size={15} />
+                    </div>
+                    <strong>{k.value}</strong>
+                    <small>{k.delta}</small>
+                  </div>
+                ))}
+              </div>
+              <div className="og-dashboard-grid">
+                <div>
+                  <section className="og-progress-card">
+                    <div className="og-section-title">
+                      MY PROGRESS <span>· {period.toUpperCase()}</span>
+                      <span className="og-badge light">On track</span>
+                    </div>
+                    <div className="og-progress-values">
+                      <div>
+                        <span className="og-progress-icon">
+                          <Users size={18} />
+                        </span>
+                        <strong>3</strong>
+                        <small>Leads created</small>
+                      </div>
+                      <div>
+                        <span className="og-progress-icon">
+                          <Phone size={18} />
+                        </span>
+                        <strong>2</strong>
+                        <small>Leads called</small>
+                      </div>
+                      <div>
+                        <span className="og-progress-icon">
+                          <Check size={18} />
+                        </span>
+                        <strong>{liveCount}</strong>
+                        <small>Live tests completed</small>
+                      </div>
+                    </div>
+                  </section>
+                  <section className="og-card og-waiting">
+                    <div className="og-section-title">
+                      WHO’S WAITING
+                      <button
+                        className="og-text-button"
+                        onClick={() => go("Calls to make")}
+                      >
+                        Open planner <ArrowRight size={13} />
+                      </button>
+                    </div>
+                    {[leads[1], leads[0]].map((l, i) => (
+                      <button
+                        className="og-person-row"
+                        key={l.id}
+                        onClick={() => setLeadIdx(leads.indexOf(l))}
+                      >
+                        <Avatar lead={l} />
+                        <div>
+                          <strong>{l.name}</strong>
+                          <small>
+                            {l.stage} · {l.product}
+                          </small>
+                        </div>
+                        <span
+                          className={"og-badge " + (i === 0 ? "red" : "amber")}
+                        >
+                          {i === 0 ? "Overdue" : "Due today"}
+                        </span>
+                        <ChevronRight size={14} />
+                      </button>
+                    ))}
+                  </section>
+                </div>
+                <div>
+                  <section className="og-card og-earnings">
+                    <div className="og-section-title">
+                      <span>MY EARNINGS THIS MONTH</span>
+                      <Trophy size={16} />
+                    </div>
+                    <strong>₹5,200</strong>
+                    <span>₹800 to the ₹6,000 slab</span>
+                    <div className="og-meter">
+                      <i style={{ width: "86%" }} />
+                    </div>
+                    <small>₹1,700 from coached moves · sample</small>
+                  </section>
+                  <section className="og-card og-tasks">
+                    <div className="og-section-title">
+                      MY TASKS
+                      <span className="og-badge amber">
+                        {3 + followups.length}
+                      </span>
+                    </div>
+                    <button onClick={() => go("Incoming")}>
+                      <PhoneMissed size={15} />
+                      <strong>2 callbacks</strong>
+                      <span>next 4:30 pm</span>
+                      <ChevronRight size={14} />
+                    </button>
+                    <button onClick={() => setLeadIdx(0)}>
+                      <Target size={15} />
+                      <strong>2 hot leads</strong>
+                      <span>untouched 24h</span>
+                      <ChevronRight size={14} />
+                    </button>
+                    <button onClick={() => go("Recent")}>
+                      <Check size={15} />
+                      <strong>
+                        {liveCount ? "Review live call" : "1 outcome"}
+                      </strong>
+                      <span>{liveCount ? "result ready" : "to log"}</span>
+                      <ChevronRight size={14} />
+                    </button>
+                    {followups.map((f) => (
+                      <button key={f.id} onClick={() => go("Calendar")}>
+                        <Clock size={15} />
+                        <strong>{f.name}</strong>
+                        <span>{f.time} · requested</span>
+                        <ChevronRight size={14} />
+                      </button>
+                    ))}
+                  </section>
+                </div>
+              </div>
+              {chart("CALLS HANDLED", [18, 22, 15, 26, 20, 12, 14], "#61bea0")}
+              {chart(
+                "CSAT TREND",
+                [88, 90, 85, 92, 89, 91, 94],
+                "#8ba5ec",
+                "%",
+              )}
+            </>
+          )}
+          {(page === "Calls to make" ||
+            page === "Incoming" ||
+            page === "Recent") && (
+            <>
+              <div className="og-plan-tabs">
+                {(["Calls to make", "Incoming", "Recent"] as Page[]).map(
+                  (p) => (
+                    <button
+                      className={page === p ? "selected" : ""}
+                      key={p}
+                      onClick={() => go(p)}
+                    >
+                      {p}
+                    </button>
+                  ),
+                )}
+              </div>
+              {page === "Calls to make" && (
+                <>
+                  <div className="og-list-heading">
+                    <div>
+                      <h2>Planned outgoing calls</h2>
+                      <p>
+                        Ranked by sample lead intent · review the context before
+                        calling
+                      </p>
+                    </div>
+                    <label className="og-search">
+                      <Search size={14} />
+                      <input
+                        aria-label="Search leads"
+                        placeholder="Search leads"
+                        value={query}
+                        onChange={(e) => {
+                          setQuery(e.target.value);
+                          setQueuePage(0);
+                        }}
+                      />
+                    </label>
+                  </div>
+                  <div className="og-card og-lead-table">
+                    {queue.map((l) => (
+                      <div key={l.id} className="og-lead-table-item">
+                        <button
+                          className="og-lead-row"
+                          aria-expanded={expanded === l.id}
+                          onClick={() =>
+                            setExpanded(expanded === l.id ? null : l.id)
+                          }
+                        >
+                          <Avatar lead={l} />
+                          <div>
+                            <strong>{l.name}</strong>
+                            <small>
+                              {l.product} · {money(l.value)} indicative
+                            </small>
+                          </div>
+                          <span className="og-language">{l.language}</span>
+                          <span className="og-score">
+                            <Target size={12} />
+                            {l.intent}
+                          </span>
+                          <ChevronDown
+                            size={15}
+                            className={expanded === l.id ? "rotated" : ""}
+                          />
+                        </button>
+                        {expanded === l.id && (
+                          <div className="og-expanded">
+                            <p>{l.reason}</p>
+                            <div className="og-chips">
+                              <span>{l.stage}</span>
+                              <span>Last contact: {l.last}</span>
+                            </div>
+                            <div className="og-actions">
+                              <button
+                                className="og-secondary"
+                                onClick={() => setLeadIdx(leads.indexOf(l))}
+                              >
+                                View lead
+                              </button>
+                              <button
+                                className="og-primary"
+                                onClick={() =>
+                                  l.id === "mukunda"
+                                    ? setCallOpen(true)
+                                    : openCallback(l)
+                                }
+                              >
+                                <Phone size={13} />
+                                {l.id === "mukunda"
+                                  ? "AI follow-up demo"
+                                  : "Plan callback"}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {!queue.length && (
+                      <p className="og-empty">No matching leads.</p>
+                    )}
+                  </div>
+                  <div className="og-paging">
+                    <button
+                      className="og-icon"
+                      aria-label="Previous leads page"
+                      disabled={queuePage === 0}
+                      onClick={() => setQueuePage((p) => p - 1)}
+                    >
+                      <ChevronLeft size={16} />
+                    </button>
+                    <span>
+                      Page {queuePage + 1} of{" "}
+                      {Math.max(1, Math.ceil(filtered.length / 3))}
+                    </span>
+                    <button
+                      className="og-icon"
+                      aria-label="Next leads page"
+                      disabled={(queuePage + 1) * 3 >= filtered.length}
+                      onClick={() => setQueuePage((p) => p + 1)}
+                    >
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </>
+              )}
+              {page === "Incoming" && (
+                <>
+                  <div className="og-list-heading">
+                    <div>
+                      <h2>Missed calls</h2>
+                      <p>
+                        Ranked by indicative opportunity value · sample queue
+                      </p>
+                    </div>
+                    <div className="og-missed-total">
+                      <strong>5</strong> unanswered{" "}
+                      <span>
+                        {money(leads.slice(1).reduce((n, l) => n + l.value, 0))}
+                      </span>{" "}
+                      value at stake
+                    </div>
+                  </div>
+                  <div className="og-card og-lead-table">
+                    {leads
+                      .slice(1)
+                      .sort((a, b) => b.value - a.value)
+                      .map((l, i) => (
+                        <div className="og-incoming-row" key={l.id}>
+                          <span className="og-missed-icon">
+                            <PhoneMissed size={16} />
+                          </span>
+                          <div>
+                            <strong>{l.name}</strong>
+                            <small>
+                              {
+                                [
+                                  "11:40 am",
+                                  "11:15 am",
+                                  "10:45 am",
+                                  "10:20 am",
+                                  "9:40 am",
+                                ][i]
+                              }{" "}
+                              · {l.product} · {l.language}
+                            </small>
+                          </div>
+                          <span className="og-value">
+                            {money(l.value)} opportunity
+                          </span>
+                          <button
+                            className="og-secondary"
+                            onClick={() => openCallback(l)}
+                          >
+                            <Phone size={12} />
+                            Call back
+                          </button>
+                        </div>
+                      ))}
+                  </div>
+                </>
+              )}
+              {page === "Recent" && (
+                <>
+                  <div className="og-list-heading">
+                    <div>
+                      <h2>Recent calls</h2>
+                      <p>Review the conversation, then close the loop</p>
+                    </div>
+                    <span className="og-badge green">
+                      {liveCount} live test completed
+                    </span>
+                  </div>
+                  <div className="og-card og-lead-table">
+                    {voice.calls.map((c) => (
+                      <button
+                        className="og-recent-row"
+                        key={c.id}
+                        onClick={() => setReview(c)}
+                      >
+                        <span className="og-outgoing-icon">
+                          <ArrowUpRight size={17} />
+                        </span>
+                        <div>
+                          <strong>
+                            Mukunda · AI follow-up demo{" "}
+                            <span className="og-badge green">Live test</span>
+                          </strong>
+                          <small>
+                            {new Date(c.createdAt).toLocaleString("en-IN", {
+                              timeZone: "Asia/Kolkata",
+                              day: "numeric",
+                              month: "short",
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}{" "}
+                            · {callLabels[c.status] || c.status}
+                          </small>
+                        </div>
+                        <span>
+                          {c.duration == null
+                            ? "Pending"
+                            : `${Math.floor(c.duration / 60)}m ${c.duration % 60}s`}
+                        </span>
+                        <ChevronRight size={16} />
+                      </button>
+                    ))}
+                    {leads.slice(1, 5).map((l, i) => (
+                      <button
+                        className="og-recent-row"
+                        key={l.id}
+                        onClick={() => setSampleReview(l)}
+                      >
+                        <span
+                          className={
+                            i % 2 ? "og-missed-icon" : "og-outgoing-icon"
+                          }
+                        >
+                          {i % 2 ? (
+                            <ArrowDownLeft size={17} />
+                          ) : (
+                            <ArrowUpRight size={17} />
+                          )}
+                        </span>
+                        <div>
+                          <strong>
+                            {l.name}
+                            <span className="og-badge neutral">Sample</span>
+                          </strong>
+                          <small>
+                            {i % 2 ? "Incoming" : "Outgoing"} · Today,{" "}
+                            {["11:20 am", "10:55 am", "10:30 am", "9:40 am"][i]}
+                          </small>
+                        </div>
+                        <span>
+                          {["3m 24s", "2m 16s", "4m 02s", "1m 48s"][i]}
+                        </span>
+                        <ChevronRight size={16} />
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+          {page === "Calendar" && calendar()}
+          {page === "Pulse" &&
+            (channel ? (
+              <section className="og-card og-channel">
+                <div className="og-channel-header">
+                  <button
+                    className="og-icon"
+                    aria-label="Back to Pulse"
+                    onClick={() => setChannel(null)}
+                  >
+                    <ChevronLeft size={19} />
+                  </button>
+                  <span className="og-channel-symbol">
+                    <Hash size={19} />
+                  </span>
+                  <div>
+                    <h2>{channel}</h2>
+                    <p>Team conversation · local demo</p>
+                  </div>
+                  <span className="og-badge purple">4 members</span>
+                </div>
+                <div className="og-pinned">
+                  <span className="og-overline">
+                    <Target size={12} /> NEEDS YOUR INPUT · PINNED
+                  </span>
+                  <h3>
+                    {responses[channel]
+                      ? "Your response is recorded"
+                      : "Confirm the callback handoff"}
+                  </h3>
+                  <p>
+                    {responses[channel] ||
+                      "Mukunda requested a Hindi callback tomorrow at 10 am. Store availability still needs confirmation."}
+                  </p>
+                  {!responses[channel] && (
+                    <>
+                      <div className="og-actions">
+                        <button
+                          className="og-secondary"
+                          onClick={() =>
+                            answer(
+                              "I will check with the store team and confirm availability.",
+                            )
+                          }
+                        >
+                          I’ll check with the store
+                        </button>
+                        <button
+                          className="og-secondary"
+                          onClick={() =>
+                            answer(
+                              "Please find another callback time with the customer.",
+                            )
+                          }
+                        >
+                          Suggest another time
+                        </button>
+                      </div>
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          answer(reply);
+                        }}
+                      >
+                        <input
+                          aria-label="Reply to pinned request"
+                          placeholder="Or type your response…"
+                          value={reply}
+                          onChange={(e) => setReply(e.target.value)}
+                        />
+                        <button
+                          className="og-primary"
+                          disabled={!reply.trim()}
+                          type="submit"
+                        >
+                          Send
+                        </button>
+                      </form>
+                    </>
+                  )}
+                </div>
+                <div className="og-thread">
+                  <div className="og-thread-date">Today · Call Centre Team</div>
+                  {(messages[channel] || initialMessages).map((m, i) => (
+                    <div
+                      className={"og-chat-row " + (m.mine ? "mine" : "")}
+                      key={i}
+                    >
+                      {!m.mine && (
+                        <span className="og-avatar small">
+                          {m.author === "AvaniBot" ? (
+                            <Sparkles size={13} />
+                          ) : (
+                            "SR"
+                          )}
+                        </span>
+                      )}
+                      <div>
+                        <span className="og-chat-author">
+                          {m.author} <time>{m.time}</time>
+                        </span>
+                        <div className="og-chat-bubble">{m.text}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <form
+                  className="og-chat-compose"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    sendMessage();
+                  }}
+                >
+                  <input
+                    aria-label="Channel message"
+                    placeholder={`Message #${channel}…`}
+                    value={chat}
+                    onChange={(e) => setChat(e.target.value)}
+                  />
+                  <button
+                    className="og-primary"
+                    aria-label="Send channel message"
+                    disabled={!chat.trim()}
+                  >
+                    <Send size={15} />
+                  </button>
+                </form>
+              </section>
+            ) : (
+              <>
+                <div className="og-pulse-search">
+                  <Sparkles size={16} />
+                  <input
+                    aria-label="Search Pulse channels"
+                    placeholder="Find a channel or agent…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                </div>
+                <section className="og-avani-card">
+                  <div className="og-avani-icon">
+                    <Sparkles size={25} />
+                  </div>
+                  <div>
+                    <h2>
+                      AvaniBot <span className="og-badge light">ALWAYS ON</span>
+                    </h2>
+                    <p>
+                      Your daily brief, open loops and team conversations in one
+                      place.
+                    </p>
+                  </div>
+                  <button
+                    className="og-secondary"
+                    onClick={() => setChannel("daily-brief")}
+                  >
+                    View daily brief <ArrowRight size={14} />
+                  </button>
+                </section>
+                <section className="og-card og-pulse-list">
+                  <div className="og-section-title">
+                    ROLE & TASK AGENTS<span>Set up by your manager</span>
+                  </div>
+                  {[
+                    {
+                      name: "Walk-out recovery",
+                      desc: "Reconnect with customers who left undecided",
+                      icon: ArrowUpRight,
+                    },
+                    {
+                      name: "Pitch coach",
+                      desc: "Practise the questions that move a conversation forward",
+                      icon: Headphones,
+                    },
+                    {
+                      name: "Follow-up agent",
+                      desc: "Keep promised callbacks from slipping through",
+                      icon: Clock,
+                    },
+                  ]
+                    .filter((a) =>
+                      a.name.toLowerCase().includes(query.toLowerCase()),
+                    )
+                    .map((a) => (
+                      <button
+                        className="og-pulse-row"
+                        key={a.name}
+                        onClick={() =>
+                          setChannel(a.name.toLowerCase().replaceAll(" ", "-"))
+                        }
+                      >
+                        <span className="og-agent-icon">
+                          <a.icon size={17} />
+                        </span>
+                        <div>
+                          <strong>{a.name}</strong>
+                          <small>{a.desc}</small>
+                        </div>
+                        <span className="og-badge purple">Open</span>
+                        <ChevronRight size={15} />
+                      </button>
+                    ))}
+                </section>
+                <button className="og-kudos" onClick={() => setKudos(true)}>
+                  <Trophy size={22} />
+                  <div>
+                    <strong>
+                      Kudos <span>3 NEW</span>
+                    </strong>
+                    <p>
+                      “Great work keeping the next step clear.” — Sunita Rao
+                    </p>
+                  </div>
+                  <strong>
+                    12 <small>all-time</small>
+                  </strong>
+                  <ChevronRight size={18} />
+                </button>
+                <section className="og-card og-pulse-list">
+                  <div className="og-section-title">CHANNELS</div>
+                  {[
+                    "callcentre-team",
+                    "all-stores",
+                    "avani-coaching",
+                    "manage-shipment",
+                    "quotation-tickets",
+                  ]
+                    .filter((c) => c.includes(query.toLowerCase()))
+                    .map((c, i) => (
+                      <button
+                        className="og-pulse-row"
+                        key={c}
+                        onClick={() => setChannel(c)}
+                      >
+                        <span className="og-channel-symbol">
+                          <Hash size={17} />
+                        </span>
+                        <div>
+                          <strong>{c}</strong>
+                          <small>
+                            {
+                              [
+                                "Review callback handoffs before the next shift",
+                                "New product briefing this week",
+                                "Let’s practise the budget conversation",
+                                "Delivery questions for the store team",
+                                "Quotes awaiting staff review",
+                              ][i]
+                            }
+                          </small>
+                        </div>
+                        {i < 2 && <span className="og-unread">{i + 1}</span>}
+                        <ChevronRight size={15} />
+                      </button>
+                    ))}
+                </section>
+              </>
+            ))}
+          <footer className="og-footer">
+            <span>
+              Sample store workspace · Prices and scores are illustrative
+            </span>
+            <span>
+              <i className="og-status-dot" /> Telephone calls use the live
+              provider
+            </span>
+          </footer>
+        </main>
+      </div>
+      {selectedLead && (
+        <Dialog title="Leads" onClose={() => setLeadIdx(null)}>
+          <div className="og-lead-modal">
+            <div className="og-modal-paging">
+              <span>
+                Your allocated leads · {leadIdx! + 1} of {leads.length}
+              </span>
+              <div>
+                <button
+                  className="og-icon"
+                  aria-label="Previous lead"
+                  disabled={leadIdx === 0}
+                  onClick={() => setLeadIdx((i) => i! - 1)}
+                >
+                  <ChevronLeft size={17} />
+                </button>
+                <button
+                  className="og-icon"
+                  aria-label="Next lead"
+                  disabled={leadIdx === leads.length - 1}
+                  onClick={() => setLeadIdx((i) => i! + 1)}
+                >
+                  <ChevronRight size={17} />
+                </button>
+              </div>
+            </div>
+            <div className="og-lead-person">
+              <Avatar lead={selectedLead} />
+              <div>
+                <h2>{selectedLead.name}</h2>
+                <p>
+                  {selectedLead.product} · {money(selectedLead.value)}{" "}
+                  indicative
+                </p>
+              </div>
+              <span className="og-badge green">OPEN</span>
+            </div>
+            <div className="og-next-step">
+              <Target size={15} />
+              <span>
+                {selectedLead.stage} · {selectedLead.language}
+              </span>
+            </div>
+            <p className="og-lead-reason">{selectedLead.reason}</p>
+            {[
+              ["ICP fit", selectedLead.fit],
+              ["Lead intent", selectedLead.intent],
+            ].map(([label, score]) => (
+              <div className="og-fit" key={label}>
+                <div>
+                  <strong>{label}</strong>
+                  <span>
+                    {score}
+                    {label === "ICP fit" ? "%" : ""}
+                  </span>
+                </div>
+                <div className="og-meter">
+                  <i
+                    style={{
+                      width: score + "%",
+                      background: label === "ICP fit" ? "#5bbd99" : "#9b7ae0",
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+            <details open className="og-lead-detail">
+              <summary>Buying signals</summary>
+              {selectedLead.signals.map((s) => (
+                <p key={s}>
+                  <Check size={12} />
+                  {s}
+                </p>
+              ))}
+            </details>
+            <details className="og-lead-detail">
+              <summary>How we got here</summary>
+              <p>
+                Sample store visit and follow-up notes. Last interaction:{" "}
+                {selectedLead.last}.
+              </p>
+            </details>
+            <details className="og-lead-detail">
+              <summary>About these scores</summary>
+              <p>
+                Illustrative fixture scores based on product fit and expressed
+                interest. These are not predictions produced by a scoring model.
+              </p>
+            </details>
+            {selectedLead.id === "mukunda" && voice.latest?.summary && (
+              <div className="og-real-result">
+                <strong>Latest live demo result</strong>
+                <p>{voice.latest.summary}</p>
+              </div>
+            )}
+            <div className="og-actions">
+              <button
+                className="og-secondary"
+                onClick={() => openCallback(selectedLead)}
+              >
+                Plan callback
+              </button>
+              {selectedLead.id === "mukunda" && (
+                <button
+                  className="og-primary"
+                  onClick={() => {
+                    setLeadIdx(null);
+                    setCallOpen(true);
+                  }}
+                >
+                  <Phone size={14} />
+                  AI follow-up demo
+                </button>
+              )}
+            </div>
+          </div>
+        </Dialog>
+      )}
+      {callOpen && (
+        <Dialog
+          title="AI follow-up demo"
+          onClose={() => setCallOpen(false)}
+          wide
+        >
+          <div className="og-call-console">
+            <section>
+              <span className="og-badge purple">WALK-OUT RECOVERY</span>
+              <h2>Mukunda · sample shopper</h2>
+              <p>
+                A shopper tried a mattress and left undecided. Ask what held
+                them back, then capture a useful next step.
+              </p>
+              <div className="og-call-checklist">
+                <span>
+                  <Check size={14} /> Hindi / Hinglish first; English if
+                  requested
+                </span>
+                <span>
+                  <Check size={14} /> 90-second provider limit
+                </span>
+                <span>
+                  <Check size={14} /> No price, EMI or availability promises
+                </span>
+              </div>
+              <div className="og-call-target">
+                <span>Authorized test phone</span>
+                <strong>{voice.config?.recipient || "Not configured"}</strong>
+              </div>
+              <button
+                className="og-primary"
+                onClick={() => void voice.start()}
+                disabled={
+                  !voice.config?.ready ||
+                  voice.starting ||
+                  (!!voice.latest && !terminal.has(voice.latest.status)) ||
+                  voice.latest?.status === "unknown" ||
+                  (voice.config?.attempts || 0) >=
+                    (voice.config?.maxAttempts || 3)
+                }
+              >
+                <Phone size={15} />
+                {voice.starting ? "Requesting call…" : "Call my test phone"}
+              </button>
+              <p className="og-footnote">
+                This calls your authorized phone with the AI demo. It does not
+                dial a real customer. Budget ₹200; review provider spend between
+                attempts.
+              </p>
+              {voice.error && (
+                <div role="alert" className="og-warning">
+                  {voice.error}
+                </div>
+              )}
+              {!voice.config?.ready && (
+                <div className="og-warning">
+                  Calling is not enabled. {voice.config?.missing.join(", ")}
+                </div>
+              )}
+            </section>
+            <section>
+              <div className="og-section-title">
+                LATEST CALL · LIVE PROVIDER
+              </div>
+              {voice.latest ? (
+                <>
+                  <h2 aria-live="polite">
+                    {callLabels[voice.latest.status] || voice.latest.status}
+                  </h2>
+                  <ol className="og-call-timeline">
+                    {voice.latest.events.map((e, i) => (
+                      <li key={i}>
+                        <span>{callLabels[e.status] || e.status}</span>
+                        <time>
+                          {new Date(e.at).toLocaleTimeString("en-IN", {
+                            timeZone: "Asia/Kolkata",
+                            hour: "numeric",
+                            minute: "2-digit",
+                            second: "2-digit",
+                          })}
+                        </time>
+                      </li>
+                    ))}
+                  </ol>
+                  {voice.latest.summary && (
+                    <>
+                      <h3>Provider summary</h3>
+                      <p>{voice.latest.summary}</p>
+                      <button
+                        className="og-secondary"
+                        onClick={() => {
+                          setCallOpen(false);
+                          setReview(voice.latest!);
+                        }}
+                      >
+                        Review transcript <ArrowRight size={13} />
+                      </button>
+                    </>
+                  )}
+                  {voice.latest.error && (
+                    <div className="og-warning">{voice.latest.error}</div>
+                  )}
+                </>
+              ) : (
+                <p className="og-muted">
+                  Your call activity appears here after starting a call.
+                </p>
+              )}
+            </section>
+          </div>
+        </Dialog>
+      )}
+      {review && (
+        <Dialog title="Call review" onClose={() => setReview(null)} wide>
+          <div className="og-call-review">
+            <div className="og-review-heading">
+              <div>
+                <h2>Mukunda · AI follow-up demo</h2>
+                <p>
+                  {callLabels[review.status] || review.status} ·{" "}
+                  {review.duration ?? "—"} seconds
+                </p>
+              </div>
+              <span className="og-badge green">Live test</span>
+            </div>
+            <div className="og-review-summary">
+              <span className="og-overline">
+                <Sparkles size={13} /> PROVIDER SUMMARY
+              </span>
+              <p>
+                {review.summary ||
+                  "The provider has not returned a finalized summary."}
+              </p>
+              <div className="og-actions">
+                <button
+                  className="og-primary"
+                  onClick={() => openCallback(leads[0])}
+                >
+                  <CalendarDays size={14} />
+                  Create callback request
+                </button>
+                <span className="og-footnote">
+                  Review details before adding to your plan.
+                </span>
+              </div>
+            </div>
+            <details className="og-provider-details">
+              <summary>Call evidence</summary>
+              <dl>
+                <dt>Provider reference</dt>
+                <dd>{review.executionId || "Pending"}</dd>
+                <dt>Reported cost</dt>
+                <dd>
+                  {review.costCents == null
+                    ? "Pending"
+                    : `${review.costCents} US cents`}
+                </dd>
+                <dt>Ended because</dt>
+                <dd>{review.terminationReason || "Pending"}</dd>
+              </dl>
+            </details>
+            <h3>Conversation transcript</h3>
+            <div className="og-transcript">
+              {review.transcript ? (
+                review.transcript
+                  .split("\n")
+                  .filter(Boolean)
+                  .map((line, i) => (
+                    <div
+                      className={line.startsWith("user:") ? "customer" : ""}
+                      key={i}
+                    >
+                      <strong>
+                        {line.startsWith("user:") ? "Customer" : "Avani"}
+                      </strong>
+                      <p>{line.replace(/^(assistant|user):\s*/, "")}</p>
+                    </div>
+                  ))
+              ) : (
+                <p>Transcript pending.</p>
+              )}
+            </div>
+          </div>
+        </Dialog>
+      )}
+      {sampleReview && (
+        <Dialog
+          title="Sample call review"
+          onClose={() => setSampleReview(null)}
+        >
+          <div className="og-dialog-body">
+            <Avatar lead={sampleReview} />
+            <h2>{sampleReview.name}</h2>
+            <p>{sampleReview.reason}</p>
+            <div className="og-warning">
+              This is sample history. No telephone call, recording or transcript
+              is claimed for this row.
+            </div>
+            <h3>Follow-up checklist</h3>
+            <ul>
+              <li>Confirm the customer’s question</li>
+              <li>Check product and policy details with store staff</li>
+              <li>Agree a next action and preferred time</li>
+            </ul>
+            <button
+              className="og-primary"
+              onClick={() => openCallback(sampleReview)}
+            >
+              Plan callback
+            </button>
+          </div>
+        </Dialog>
+      )}
+      {callback && (
+        <Dialog title="Plan a callback" onClose={() => setCallback(null)}>
+          <form
+            className="og-dialog-body og-callback-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              saveFollowup();
+            }}
+          >
+            <h2>{callback.name}</h2>
+            <p>
+              Capture the requested time. Store availability still needs
+              confirmation.
+            </p>
+            <label>
+              Date
+              <input
+                type="date"
+                min="2026-11-08"
+                required
+                value={callbackDate}
+                onChange={(e) => setCallbackDate(e.target.value)}
+              />
+            </label>
+            <label>
+              Time · IST
+              <input
+                type="time"
+                required
+                value={callbackTime}
+                onChange={(e) => setCallbackTime(e.target.value)}
+              />
+            </label>
+            <label>
+              Language
+              <select
+                value={callbackLanguage}
+                onChange={(e) => setCallbackLanguage(e.target.value)}
+              >
+                {[
+                  "Hindi",
+                  "English",
+                  "Kannada",
+                  "Tamil",
+                  "Telugu",
+                  "Other",
+                ].map((l) => (
+                  <option key={l}>{l}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Context for store staff
+              <textarea
+                value={callbackNote}
+                onChange={(e) => setCallbackNote(e.target.value)}
+                placeholder="Customer’s question, budget or anything to check…"
+              />
+            </label>
+            <div className="og-warning">
+              Saved to this demo’s local plan. This does not schedule a provider
+              call or send a calendar invitation.
+            </div>
+            <button className="og-primary" type="submit">
+              Save callback request
+            </button>
+          </form>
+        </Dialog>
+      )}
+      {kudos && (
+        <Dialog title="Kudos" onClose={() => setKudos(false)}>
+          <div className="og-dialog-body og-kudos-list">
+            <Trophy size={32} />
+            <h2>Good work deserves a mention.</h2>
+            {[
+              "Great work keeping the next step clear.",
+              "Thank you for returning the missed calls before your shift ended.",
+              "Strong progress on asking questions before making a recommendation.",
+            ].map((t, i) => (
+              <blockquote key={t}>
+                “{t}”
+                <footer>
+                  Sunita Rao · {i === 0 ? "Today" : i + " days ago"} · sample
+                </footer>
+              </blockquote>
+            ))}
+          </div>
+        </Dialog>
+      )}
+      {notice && (
+        <div role="status" className="og-toast">
+          <Check size={15} />
+          {notice}
+        </div>
+      )}
+    </div>
+  );
+}
