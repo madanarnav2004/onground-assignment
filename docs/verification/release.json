@@ -1,15 +1,34 @@
 {
-  "verifiedAt": "2026-11-08T14:45:05.815Z",
+  "verifiedAt": "2026-11-08T15:33:11.140Z",
   "productionUrl": "https://onground-arnav.vercel.app",
   "repository": "https://github.com/madanarnav2004/onground-assignment",
-  "deploymentId": "dpl_MNQ6UkwfeMnSyixPrYHET5uWwBR8",
-  "state": "READY",
+  "videoUrl": "https://onground-arnav.vercel.app/submission.mp4",
+  "runtimeCodeCommit": "eb84ed5",
+  "testsPassed": 37,
+  "buildPassed": true,
   "region": "bom1",
-  "commit": "9d07eb964c96d77a793a35dd56bf2102b0559a12",
   "publicRepository": true,
   "defaultBranch": "codex/onground-calling",
-  "testsPassed": 36,
-  "nativeRecording": "blocked: Mac locked",
-  "humanAudio": "Not yet independently verified; deferred until user returns",
-  "intelligence": "Hosted Workers AI roleplay, feedback, Avani and ASM approval/completion passed"
+  "recovery": "Real telephone call completed,88seconds",
+  "browserVoiceCoaching": "Completed,31.9seconds,actual transcript and grounded feedback saved",
+  "humanCalling": "Completed,27seconds,two-way audio explicitly confirmed",
+  "followup": "Completed,90seconds,transcript/summary/handoff saved",
+  "intelligence": "Hosted Workers AI Avani, roleplay, feedback and ASM approval/completion verified",
+  "video": {
+    "durationSeconds": 109.8,
+    "sha256": "3b64310b8bb174f88693531c1dd2c206b07a44e2b515222a2882cdb63322bc4b",
+    "evidence": "docs/verification/recording.json"
+  },
+  "emailSent": false,
+  "deploymentId": "dpl_33fB6YR23o9uzd7Ya9M2RNc1JXWG",
+  "deployedSourceCommit": "09b63087f4a037104d09cd29bc20ed36e0bccf3a",
+  "state": "READY",
+  "publicChecks": {
+    "app": 200,
+    "api": 200,
+    "video": 200,
+    "videoContentType": "video/mp4",
+    "downloadedVideoHashMatches": true,
+    "githubVisibility": "PUBLIC"
+  }
 }

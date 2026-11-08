@@ -4,7 +4,7 @@ An original React and TypeScript implementation of the supplied Call Centre mock
 
 [Live app](https://onground-arnav.vercel.app) · [109-second demo](https://onground-arnav.vercel.app/submission.mp4) · [Source](https://github.com/madanarnav2004/onground-assignment) · [Reviewer guide](docs/REVIEWER_GUIDE.md)
 
-The app is deployed in Vercel’s Mumbai region. Verified features and the remaining live-audio and screen-recording checkpoints are tracked in [the delivery checklist](docs/SUBMISSION.md).
+The app is deployed in Vercel’s Mumbai region. Verified features, live-audio evidence and the finished screen recording are tracked in [the delivery checklist](docs/SUBMISSION.md).
 
 The store metrics, lead profiles, intent scores and historical examples are sample data. Actual provider calls and assistant responses are handled separately. This is an assignment demonstration, with consenting participants roleplaying shoppers.
 

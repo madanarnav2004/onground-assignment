@@ -36,9 +36,9 @@ The finished Safari screen recording is 109.80 seconds (under two minutes), with
 - [x] Hosted persistence and separate reviewer sessions checked.
 - [x] Provider errors and exhausted allowances never appear as completed calls.
 - [x] Tests and production build pass (37 tests); final published revision tracked in verification/release.json.
-- [x] Public app and repository open for a reviewer without owner permissions. Recording link remains pending.
+- [x] Public app, repository and recording open for a reviewer without owner permissions.
 - [x] Recording runtime verified at or below two minutes.
-- [ ] README and submission email use final links and accurate completion claims.
+- [x] README and submission email use final links and accurate completion claims.
 
 ## Email copy
 
