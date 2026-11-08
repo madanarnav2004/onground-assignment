@@ -141,6 +141,11 @@ export type HandoffDraft = {
   state: "suggested";
 };
 export type Call = {
+  kind?: string;
+  role?: string;
+  leadId?: string;
+  notes?: string;
+  disposition?: string;
   id: string;
   status: string;
   createdAt: string;
@@ -171,6 +176,7 @@ export const terminal = new Set([
   "error",
   "balance-low",
   "unknown",
+  "ended",
 ]);
 export const callLabels: Record<string, string> = {
   queued: "Waiting to dial",

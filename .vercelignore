@@ -1,0 +1,9 @@
+.git/
+.private/
+data/
+.env*
+node_modules/
+docs/
+tests/
+scripts/
+README.md

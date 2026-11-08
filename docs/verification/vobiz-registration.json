@@ -1,0 +1,20 @@
+{
+  "checkedAt": "2026-11-08T13:58:55.295Z",
+  "provider": "Vobiz",
+  "application": "Dedicated assignment application",
+  "usesExistingTrialNumber": true,
+  "newNumberPurchased": false,
+  "JWTMinted": true,
+  "JWTExpirySeconds": 180,
+  "permissions": {
+    "voice": {
+      "incoming_allow": false,
+      "outgoing_allow": true
+    }
+  },
+  "registration": {
+    "registered": true,
+    "status": 200
+  },
+  "noPhoneCallMade": true
+}

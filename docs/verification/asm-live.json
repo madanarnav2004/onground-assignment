@@ -1,0 +1,27 @@
+{
+  "verifiedAt": "2026-11-08T13:58:42.968Z",
+  "source": "Live Bolna GPT-4.1-mini analysis over a sample workspace",
+  "result": {
+    "answer": "[{\"leadId\":\"mukunda\",\"title\":\"Confirm mattress options within Rs 10,000 budget\",\"owner\":\"Store team\",\"reason\":\"Explicit callback scheduled for 9 Nov 10:00 AM to discuss affordable options as per customer's budget.\"},{\"leadId\":\"sanjay\",\"title\":\"Make callback to discuss ergonomic chair options\",\"owner\":\"Call centre\",\"reason\":\"Customer requested callback after work mentioning adjustable lumbar support and comparing chair options.\"},{\"leadId\":\"ritu\",\"title\":\"Provide written quote and delivery details\",\"owner\":\"Store team\",\"reason\":\"Customer asked for quote follow-up and delivery availability confirmation.\"}]",
+    "tasks": [
+      {
+        "leadId": "mukunda",
+        "title": "Confirm mattress options within Rs 10,000 budget",
+        "reason": "Explicit callback scheduled for 9 Nov 10:00 AM to discuss affordable options as per customer's budget.",
+        "owner": "Store team"
+      },
+      {
+        "leadId": "sanjay",
+        "title": "Make callback to discuss ergonomic chair options",
+        "reason": "Customer requested callback after work mentioning adjustable lumbar support and comparing chair options.",
+        "owner": "Call centre"
+      },
+      {
+        "leadId": "ritu",
+        "title": "Provide written quote and delivery details",
+        "reason": "Customer asked for quote follow-up and delivery availability confirmation.",
+        "owner": "Store team"
+      }
+    ]
+  }
+}

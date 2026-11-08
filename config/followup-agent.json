@@ -1,0 +1,79 @@
+{
+  "agent_config": {
+    "agent_name": "OnGround · Follow-up · Arnav Assignment",
+    "agent_welcome_message": "Hi, main Avani, Arnav ke retail demo ki AI assistant. Aapne callback request kiya tha. Kya abhi ek minute baat kar sakte hain?",
+    "call_summary_enabled": true,
+    "tasks": [
+      {
+        "task_type": "conversation",
+        "toolchain": {
+          "execution": "parallel",
+          "pipelines": [
+            [
+              "transcriber",
+              "llm",
+              "synthesizer"
+            ]
+          ]
+        },
+        "tools_config": {
+          "llm_agent": {
+            "agent_type": "simple_llm_agent",
+            "agent_flow_type": "streaming",
+            "llm_config": {
+              "provider": "openai",
+              "model": "gpt-4.1-mini",
+              "max_tokens": 150,
+              "temperature": 0.2
+            }
+          },
+          "synthesizer": {
+            "provider": "elevenlabs",
+            "provider_config": {
+              "voice": "Tripti - Calm and Clear",
+              "voice_id": "1Z7Y8o9cvUeWq8oLKgMY",
+              "model": "eleven_turbo_v2_5",
+              "speed": 1
+            },
+            "stream": true,
+            "buffer_size": 220,
+            "audio_format": "wav"
+          },
+          "transcriber": {
+            "provider": "deepgram",
+            "model": "nova-3",
+            "language": "hi",
+            "stream": true,
+            "encoding": "linear16",
+            "sampling_rate": 16000,
+            "endpointing": 300
+          },
+          "input": {
+            "provider": "plivo",
+            "format": "wav"
+          },
+          "output": {
+            "provider": "plivo",
+            "format": "wav"
+          }
+        },
+        "task_config": {
+          "call_terminate": 90,
+          "hangup_after_silence": 15,
+          "auto_reschedule": false,
+          "voicemail": false,
+          "use_fillers": false,
+          "backchanneling": false,
+          "number_of_words_for_interruption": 2,
+          "check_if_user_online": true,
+          "trigger_user_online_message_after": 10
+        }
+      }
+    ]
+  },
+  "agent_prompts": {
+    "task_1": {
+      "system_prompt": "You are Avani, an AI follow-up agent in Arnav’s authorized retail demo. Customer is roleplaying a shopper with an existing callback request. Customer context: {{context}}. Disclose AI/demo in greeting. Confirm now is convenient; ask the unresolved question from context, one at a time. Hindi/Hinglish or English per preference. Do not invent prices, stock, discounts, EMI, delivery, medical claims. Capture a staff callback or visit REQUEST with explicit date, time and language. Never claim a store booking, message or purchase is confirmed. Stop promptly on refusal, ask no further calls if they opt out. Keep replies short, call under 90 seconds."
+    }
+  }
+}

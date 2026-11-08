@@ -1,4 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   Activity,
   ArrowDownLeft,
@@ -36,6 +43,11 @@ import {
   type Call,
 } from "./data";
 import { useCalls } from "./useCalls";
+import { useRemote, useWorkspace, post } from "./workspaceState";
+import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip } from "recharts";
+import verifiedCall from "./verifiedCall.json";
+const AgentPanel = lazy(() => import("./AgentPanel"));
+type AgentRole = "avani" | "asm" | "coach" | "followup" | "telecaller";
 
 type Page =
   "Dashboard" | "Calls to make" | "Incoming" | "Recent" | "Calendar" | "Pulse";
@@ -49,20 +61,6 @@ type Followup = {
   sourceCallId?: string;
 };
 type Message = { author: string; text: string; time: string; mine?: boolean };
-function stored<T>(key: string, fallback: T): T {
-  try {
-    return JSON.parse(localStorage.getItem(key) || "null") ?? fallback;
-  } catch {
-    return fallback;
-  }
-}
-function useLocal<T>(key: string, fallback: T) {
-  const [v, set] = useState<T>(() => stored(key, fallback));
-  useEffect(() => {
-    localStorage.setItem(key, JSON.stringify(v));
-  }, [key, v]);
-  return [v, set] as const;
-}
 function Avatar({ lead }: { lead: Lead }) {
   return <span className="og-avatar">{lead.initials}</span>;
 }
@@ -174,15 +172,13 @@ export function Workspace() {
     [callback, setCallback] = useState<Lead | null>(null),
     [notice, setNotice] = useState(""),
     [channel, setChannel] = useState<string | null>(null);
-  const [messages, setMessages] = useLocal<Record<string, Message[]>>(
-      "og-messages-v1",
-      {},
-    ),
-    [responses, setResponses] = useLocal<Record<string, string>>(
-      "og-responses-v1",
-      {},
-    ),
-    [followups, setFollowups] = useLocal<Followup[]>("og-followups-v1", []);
+  const [messages, setMessages] = useRemote("messages"),
+    [responses, setResponses] = useRemote("responses"),
+    [followups, setFollowups] = useRemote("followups");
+  const remote = useWorkspace();
+  const [agentOpen, setAgentOpen] = useState<AgentRole | null>(null),
+    [demoPhone, setDemoPhone] = useState(""),
+    [demoConsent, setDemoConsent] = useState(false);
   const [reply, setReply] = useState(""),
     [chat, setChat] = useState(""),
     [callbackDate, setCallbackDate] = useState(""),
@@ -195,7 +191,9 @@ export function Workspace() {
   const voice = useCalls();
   const selectedLead = leadIdx === null ? null : leads[leadIdx];
   function leadContext(lead: Lead) {
-    const draft = lead.id === "mukunda" ? voice.latest?.handoffDraft : null;
+    const draft = voice.calls.find(
+      (c) => (c.leadId || "mukunda") === lead.id && c.handoffDraft,
+    )?.handoffDraft;
     return draft
       ? `${draft.language || "Customer"} callback requested${draft.date ? " for " + new Date(draft.date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : ""}${draft.time ? " at " + draft.time + " IST" : ""}.${draft.budget ? " Budget " + money(draft.budget) + "." : ""} Store confirmation pending.`
       : lead.reason;
@@ -224,7 +222,9 @@ export function Workspace() {
   }
   function openCallback(l: Lead) {
     const existing = followups.find((f) => f.name === l.name);
-    const draft = l.id === "mukunda" ? voice.latest?.handoffDraft : null;
+    const draft = voice.calls.find(
+      (c) => (c.leadId || "mukunda") === l.id && c.handoffDraft,
+    )?.handoffDraft;
     setCallback(l);
     setCallbackDate(existing?.date || draft?.date || "");
     setCallbackTime(existing?.time || draft?.time || "");
@@ -242,7 +242,7 @@ export function Workspace() {
           : ""),
     );
   }
-  function saveFollowup() {
+  async function saveFollowup() {
     if (!callback || !callbackDate || !callbackTime) return;
     const existing = followups.find((f) => f.name === callback.name);
     const value = {
@@ -252,9 +252,11 @@ export function Workspace() {
       time: callbackTime,
       language: callbackLanguage,
       note: callbackNote,
-      sourceCallId: callback.id === "mukunda" ? voice.latest?.id : undefined,
+      sourceCallId: voice.calls.find(
+        (c) => (c.leadId || "mukunda") === callback.id,
+      )?.id,
     };
-    setFollowups((rows) =>
+    await setFollowups((rows) =>
       existing
         ? rows.map((f) => (f.id === existing.id ? value : f))
         : [...rows, value],
@@ -262,25 +264,26 @@ export function Workspace() {
     setCallback(null);
     setNotice("Callback request saved. Store confirmation is pending.");
   }
-  function savePreparedRequest(call: Call) {
+  async function savePreparedRequest(call: Call) {
     const draft = call.handoffDraft;
+    const handoffLead = leads.find((l) => l.id === call.leadId) || leads[0];
     if (!draft?.date || !draft.time || !draft.language) {
-      openCallback(leads[0]);
+      openCallback(handoffLead);
       return;
     }
     const exists = followups.some(
-      (f) => f.sourceCallId === call.id || f.name === leads[0].name,
+      (f) => f.sourceCallId === call.id || f.name === handoffLead.name,
     );
     if (exists) {
-      openCallback(leads[0]);
+      openCallback(handoffLead);
       return;
     }
-    setFollowups((rows) => [
+    await setFollowups((rows) => [
       ...rows,
       {
         id: crypto.randomUUID(),
         sourceCallId: call.id,
-        name: leads[0].name,
+        name: handoffLead.name,
         date: draft.date,
         time: draft.time,
         language: draft.language,
@@ -297,7 +300,7 @@ export function Workspace() {
       "Callback request saved from the call. Store confirmation is pending.",
     );
   }
-  function sendMessage() {
+  async function sendMessage() {
     if (!chat.trim() || !channel) return;
     const msg = {
       author: "You",
@@ -308,15 +311,15 @@ export function Workspace() {
       }),
       mine: true,
     };
-    setMessages((all) => ({
+    await setMessages((all) => ({
       ...all,
       [channel]: [...(all[channel] || initialMessages), msg],
     }));
     setChat("");
   }
-  function answer(text: string) {
+  async function answer(text: string) {
     if (!channel || !text.trim()) return;
-    setResponses((v) => ({ ...v, [channel]: text.trim() }));
+    await setResponses((v) => ({ ...v, [channel]: text.trim() }));
     setReply("");
     setNotice("Your response is saved in this demo workspace.");
   }
@@ -335,26 +338,37 @@ export function Workspace() {
           {title}
           <span>LAST 7 DAYS · SAMPLE</span>
         </div>
-        <div className="og-bars">
-          {values.map((v, i) => (
-            <div key={i}>
-              <span>
-                {v}
-                {suffix}
-              </span>
-              <div className="og-bar-track">
-                <div
-                  style={{
-                    height: (v / Math.max(...values)) * 100 + "%",
-                    background: color,
-                  }}
-                />
-              </div>
-              <small>
-                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"][i]}
-              </small>
-            </div>
-          ))}
+        <div
+          style={{ height: 180, width: "100%" }}
+          role="img"
+          aria-label={`${title}, seven day sample: ${values.join(", ")}`}
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={values.map((value, i) => ({
+                day: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Today"][i],
+                value,
+              }))}
+              margin={{ top: 20, right: 8, bottom: 0, left: 8 }}
+            >
+              <XAxis
+                dataKey="day"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 11, fill: "#6e7975" }}
+              />
+              <Tooltip
+                formatter={(value) => `${value}${suffix}`}
+                cursor={{ fill: "#f2f5f3" }}
+              />
+              <Bar
+                dataKey="value"
+                fill={color}
+                radius={[4, 4, 0, 0]}
+                maxBarSize={28}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </section>
     );
@@ -588,6 +602,46 @@ export function Workspace() {
           </div>
           {page === "Dashboard" && (
             <>
+              {remote.state.tasks.length > 0 && (
+                <section className="og-card og-live-tasks">
+                  <div className="og-section-title">
+                    YOUR NEXT ACTIONS<span>From your reviewed agent plan</span>
+                  </div>
+                  {remote.state.tasks.map((t) => (
+                    <div key={t.id}>
+                      <button
+                        aria-label={`Mark ${t.title} ${t.status === "done" ? "open" : "done"}`}
+                        onClick={() =>
+                          void post("/api/tasks/complete", { id: t.id }).then(
+                            remote.reload,
+                          )
+                        }
+                      >
+                        {t.status === "done" ? (
+                          <Check size={16} />
+                        ) : (
+                          <span className="og-task-circle" />
+                        )}
+                      </button>
+                      <div>
+                        <strong
+                          style={{
+                            textDecoration:
+                              t.status === "done" ? "line-through" : "none",
+                          }}
+                        >
+                          {t.title}
+                        </strong>
+                        <p>
+                          {leads.find((l) => l.id === t.leadId)?.name} ·{" "}
+                          {t.owner}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </section>
+              )}
+
               <section className="og-focus-card">
                 <span className="og-focus-icon">
                   <Sparkles size={20} />
@@ -1015,6 +1069,22 @@ export function Workspace() {
               )}
               {page === "Recent" && (
                 <>
+                  <button
+                    className="og-proof-record og-card"
+                    onClick={() => setReview(verifiedCall as Call)}
+                  >
+                    <span className="og-badge green">REAL CALL · VERIFIED</span>
+                    <div>
+                      <strong>
+                        Walk-out recovery · recorded acceptance test
+                      </strong>
+                      <p>
+                        8 Nov · Hindi · 88 seconds · shopper roleplay, phone
+                        omitted
+                      </p>
+                    </div>
+                    <ArrowRight size={18} />
+                  </button>
                   <div className="og-list-heading">
                     <div>
                       <h2>Recent calls</h2>
@@ -1036,7 +1106,11 @@ export function Workspace() {
                         </span>
                         <div>
                           <strong>
-                            Mukunda · AI follow-up demo{" "}
+                            {c.kind === "human"
+                              ? "Human callback"
+                              : c.role === "followup"
+                                ? "AI callback"
+                                : "Mukunda · AI recovery demo"}{" "}
                             <span className="og-badge green">Live test</span>
                           </strong>
                           <small>
@@ -1113,7 +1187,7 @@ export function Workspace() {
                   </span>
                   <div>
                     <h2>{channel}</h2>
-                    <p>Team conversation · local demo</p>
+                    <p>Team conversation · your demo workspace</p>
                   </div>
                   <span className="og-badge purple">4 members</span>
                 </div>
@@ -1250,9 +1324,9 @@ export function Workspace() {
                   </div>
                   <button
                     className="og-secondary"
-                    onClick={() => setChannel("daily-brief")}
+                    onClick={() => setAgentOpen("avani")}
                   >
-                    View daily brief <ArrowRight size={14} />
+                    Ask Avani <ArrowRight size={14} />
                   </button>
                 </section>
                 <section className="og-card og-pulse-list">
@@ -1261,19 +1335,34 @@ export function Workspace() {
                   </div>
                   {[
                     {
+                      role: "recovery",
                       name: "Walk-out recovery",
                       desc: "Reconnect with customers who left undecided",
                       icon: ArrowUpRight,
                     },
                     {
+                      role: "coach",
                       name: "Pitch coach",
                       desc: "Practise the questions that move a conversation forward",
                       icon: Headphones,
                     },
                     {
+                      role: "followup",
                       name: "Follow-up agent",
                       desc: "Keep promised callbacks from slipping through",
                       icon: Clock,
+                    },
+                    {
+                      role: "asm",
+                      name: "ASM Agent",
+                      desc: "Turn callback promises and open questions into a priority plan",
+                      icon: BarChart3,
+                    },
+                    {
+                      role: "telecaller",
+                      name: "Tele-caller",
+                      desc: "Speak from your browser, then capture the outcome",
+                      icon: Phone,
                     },
                   ]
                     .filter((a) =>
@@ -1284,7 +1373,9 @@ export function Workspace() {
                         className="og-pulse-row"
                         key={a.name}
                         onClick={() =>
-                          setChannel(a.name.toLowerCase().replaceAll(" ", "-"))
+                          a.role === "recovery"
+                            ? setCallOpen(true)
+                            : setAgentOpen(a.role as AgentRole)
                         }
                       >
                         <span className="og-agent-icon">
@@ -1492,6 +1583,42 @@ export function Workspace() {
           </div>
         </Dialog>
       )}
+      {agentOpen && (
+        <Dialog
+          title={
+            {
+              avani: "AvaniBot",
+              asm: "ASM Agent",
+              coach: "Practise a call",
+              followup: "Follow-up agent",
+              telecaller: "Call back · human calling",
+            }[agentOpen]
+          }
+          onClose={() => {
+            setAgentOpen(null);
+            void voice.reload();
+          }}
+          wide
+        >
+          <Suspense
+            fallback={<div className="og-dialog-body">Opening assistant…</div>}
+          >
+            <AgentPanel
+              role={agentOpen}
+              onRecovery={() => {
+                setAgentOpen(null);
+                setCallOpen(true);
+              }}
+            />
+          </Suspense>
+        </Dialog>
+      )}
+      {remote.error && (
+        <div className="og-save-error" role="alert">
+          {remote.error}
+          <button onClick={() => void remote.reload()}>Reconnect</button>
+        </div>
+      )}
       {callOpen && (
         <Dialog
           title="AI follow-up demo"
@@ -1524,13 +1651,37 @@ export function Workspace() {
                 </div>
               </details>
               <div className="og-call-target">
-                <span>Authorized test phone</span>
-                <strong>{voice.config?.recipient || "Not configured"}</strong>
+                <label style={{ width: "100%" }}>
+                  Your demo phone
+                  <input
+                    aria-label="Your demo phone"
+                    type="tel"
+                    placeholder="+91 mobile number"
+                    value={demoPhone}
+                    onChange={(e) => setDemoPhone(e.target.value)}
+                  />
+                </label>
               </div>
+              <label className="og-consent">
+                <input
+                  type="checkbox"
+                  checked={demoConsent}
+                  onChange={(e) => setDemoConsent(e.target.checked)}
+                />
+                This is my number and I agree to a short AI demo call.
+              </label>
               <button
                 className="og-primary"
-                onClick={() => void voice.start()}
+                onClick={() =>
+                  void voice.start({
+                    phone: demoPhone,
+                    consent: demoConsent,
+                    leadId: "mukunda",
+                  })
+                }
                 disabled={
+                  !demoConsent ||
+                  !demoPhone.trim() ||
                   !voice.config?.ready ||
                   voice.starting ||
                   (!!voice.latest && !terminal.has(voice.latest.status)) ||
@@ -1540,12 +1691,12 @@ export function Workspace() {
                 }
               >
                 <Phone size={15} />
-                {voice.starting ? "Requesting call…" : "Call my test phone"}
+                {voice.starting ? "Requesting call…" : "Call my phone"}
               </button>
               <p className="og-footnote">
-                This calls your authorized phone with the AI demo. It does not
-                dial a real customer. Budget ₹200; review provider spend between
-                attempts.
+                A real 90-second AI call. Trial accounts may require recipient
+                verification. The demo has a shared usage limit; no automatic
+                redials.
               </p>
               {voice.error && (
                 <div role="alert" className="og-warning">
@@ -1624,14 +1775,40 @@ export function Workspace() {
           <div className="og-call-review">
             <div className="og-review-heading">
               <div>
-                <h2>Mukunda · AI follow-up demo</h2>
+                <h2>
+                  {leads.find((l) => l.id === review.leadId)?.name || "Mukunda"}{" "}
+                  ·{" "}
+                  {review.kind === "human"
+                    ? "Human callback"
+                    : "AI follow-up demo"}
+                </h2>
                 <p>
                   {callLabels[review.status] || review.status} ·{" "}
                   {review.duration ?? "—"} seconds
                 </p>
               </div>
-              <span className="og-badge green">Live test</span>
+              <span className="og-badge green">
+                {review.id === verifiedCall.id
+                  ? "RECORDED TEST · 8 NOV"
+                  : "Live test"}
+              </span>
             </div>
+            {review.id === verifiedCall.id && (
+              <section className="og-proof-audio">
+                <strong>Listen to the real call</strong>
+                <p>
+                  42-second excerpt from the completed 88-second Hindi test.
+                  This is the original AI and authorised participant, recorded
+                  on 8 November.
+                </p>
+                <audio
+                  controls
+                  preload="none"
+                  src="/verified-call-excerpt.mp3"
+                  aria-label="Original real telephone call excerpt"
+                />
+              </section>
+            )}
             {review.handoffDraft ? (
               <div className="og-next-action-card">
                 <div className="og-section-title">
@@ -1689,7 +1866,11 @@ export function Workspace() {
                   ) && (
                     <button
                       className="og-secondary"
-                      onClick={() => openCallback(leads[0])}
+                      onClick={() =>
+                        openCallback(
+                          leads.find((l) => l.id === review.leadId) || leads[0],
+                        )
+                      }
                     >
                       Edit details
                     </button>
@@ -1709,7 +1890,11 @@ export function Workspace() {
                 </p>
                 <button
                   className="og-primary"
-                  onClick={() => openCallback(leads[0])}
+                  onClick={() =>
+                    openCallback(
+                      leads.find((l) => l.id === review.leadId) || leads[0],
+                    )
+                  }
                 >
                   Plan callback
                 </button>
@@ -1892,8 +2077,9 @@ export function Workspace() {
                 </details>
               )}
             <p className="og-footnote">
-              Saves a local callback request. Store confirmation is still
-              needed; no call or invitation is sent.
+              Saves this callback in your private demo workspace. Use the
+              Follow-up agent to schedule an AI call; store confirmation remains
+              separate.
             </p>
             <button className="og-primary" type="submit">
               {followups.some((f) => f.name === callback.name)

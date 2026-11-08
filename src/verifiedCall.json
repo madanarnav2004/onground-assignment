@@ -1,0 +1,50 @@
+{
+  "id": "6057265f-4066-4119-87cc-8371df6ff953",
+  "status": "completed",
+  "createdAt": "2026-11-08T09:34:54.671Z",
+  "executionId": "045b0b0f-0588-4e43-9302-ba6160a726bb",
+  "duration": 88,
+  "costCents": 9,
+  "transcript": "assistant: Hi, main Avani, Arnav ke retail demo ki AI assistant. Kya abhi ek minute baat kar sakte hain? Hindi ya English, jo aap prefer karein.\nuser:  हां जी हिंदी में बात कर सकते हैं\nassistant:  धन्यवाद! तो आप हमारे स्टोर में मैट्रेस ट्राई कर चुके हैं और अभी फैसला नहीं कर पाए। क्या आपको आराम या कीमत में कोई दिक्कत हुई?\nuser:  क़ीमत में दिक़्क़त है madam\nassistant:  समझ गई। आपका बजट क्या है, ताकि मैं स्टोर टीम से पूछ सकूं कि वे कोई विकल्प बता सकें?\nuser:  दस हज़ार का है ma'am\nassistant:  ठीक है, मैं स्टोर टीम को बताऊंगी कि आपका बजट दस हज़ार है। क्या आप उनसे कॉल पर बात करना चाहेंगे? अगर हां, तो कब और किस भाषा में?\nuser:  ma'am आप लगवा दीजिए कल call करवा दीजिए\nassistant:  कल कौन सा समय आपके लिए ठीक रहेगा कॉल के लिए? और क्या हिंदी में बात करनी है?\nuser:  सुबह दस बजे हिंदी चलती है ma'am\nassistant:   समझ गई। कल सुबह 10 बजे हिंदी में स्टोर टीम की कॉल के लिए अनुरोध दर्ज कर दिया है। क्या आप और कुछ पूछना चाहेंगे?\nuser:  नहीं madam thank you\nassistant: आपका धन्यवाद! आपने दस हज़ार के बजट में कॉल की रिक्वेस्ट की है, कल सुबह 10 बजे हिंदी में। स्टोर टीम कॉल की पुष्टि करेगी। शुभ दिन!\n",
+  "summary": "The conversation was between a customer and an AI assistant named Avani regarding the customer's mattress purchase decision. The customer had tried mattresses at the store but faced issues with the price, stating a budget of ten thousand rupees. The assistant offered to arrange a call with the store team to discuss options within this budget. The customer requested the call to be scheduled for the next day at 10 AM in Hindi. The assistant confirmed the request and informed that the store team would confirm the call.",
+  "terminationReason": "user_hung_up",
+  "handoffDraft": {
+    "sourceCallId": "6057265f-4066-4119-87cc-8371df6ff953",
+    "date": "2026-11-09",
+    "time": "10:00",
+    "language": "Hindi",
+    "budget": 10000,
+    "concern": "Price is an obstacle for the customer.",
+    "evidence": [
+      "हां जी हिंदी में बात कर सकते हैं",
+      "क़ीमत में दिक़्क़त है madam",
+      "दस हज़ार का है ma'am",
+      "ma'am आप लगवा दीजिए कल call करवा दीजिए",
+      "सुबह दस बजे हिंदी चलती है ma'am",
+      "नहीं madam thank you"
+    ],
+    "state": "suggested"
+  },
+  "events": [
+    {
+      "status": "queued",
+      "at": "2026-11-08T09:34:54.876Z"
+    },
+    {
+      "status": "ringing",
+      "at": "2026-11-08T09:35:00.363Z"
+    },
+    {
+      "status": "in-progress",
+      "at": "2026-11-08T09:35:17.706Z"
+    },
+    {
+      "status": "call-disconnected",
+      "at": "2026-11-08T09:36:31.642Z"
+    },
+    {
+      "status": "completed",
+      "at": "2026-11-08T09:36:51.813Z"
+    }
+  ]
+}

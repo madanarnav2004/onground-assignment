@@ -1,0 +1,79 @@
+{
+  "agent_config": {
+    "agent_name": "OnGround · Retail Intelligence · Arnav Assignment",
+    "agent_welcome_message": "Hi, I am Avani, the retail team assistant for this assignment demo.",
+    "call_summary_enabled": true,
+    "tasks": [
+      {
+        "task_type": "conversation",
+        "toolchain": {
+          "execution": "parallel",
+          "pipelines": [
+            [
+              "transcriber",
+              "llm",
+              "synthesizer"
+            ]
+          ]
+        },
+        "tools_config": {
+          "llm_agent": {
+            "agent_type": "simple_llm_agent",
+            "agent_flow_type": "streaming",
+            "llm_config": {
+              "provider": "openai",
+              "model": "gpt-4.1-mini",
+              "max_tokens": 150,
+              "temperature": 0.2
+            }
+          },
+          "synthesizer": {
+            "provider": "elevenlabs",
+            "provider_config": {
+              "voice": "Tripti - Calm and Clear",
+              "voice_id": "1Z7Y8o9cvUeWq8oLKgMY",
+              "model": "eleven_turbo_v2_5",
+              "speed": 1
+            },
+            "stream": true,
+            "buffer_size": 220,
+            "audio_format": "wav"
+          },
+          "transcriber": {
+            "provider": "deepgram",
+            "model": "nova-3",
+            "language": "hi",
+            "stream": true,
+            "encoding": "linear16",
+            "sampling_rate": 16000,
+            "endpointing": 300
+          },
+          "input": {
+            "provider": "plivo",
+            "format": "wav"
+          },
+          "output": {
+            "provider": "plivo",
+            "format": "wav"
+          }
+        },
+        "task_config": {
+          "call_terminate": 90,
+          "hangup_after_silence": 15,
+          "auto_reschedule": false,
+          "voicemail": false,
+          "use_fillers": false,
+          "backchanneling": false,
+          "number_of_words_for_interruption": 2,
+          "check_if_user_online": true,
+          "trigger_user_online_message_after": 10
+        }
+      }
+    ]
+  },
+  "agent_prompts": {
+    "task_1": {
+      "system_prompt": "You help Indian retail store staff reason from the supplied workspace evidence. Distinguish sample data from actual call evidence. Never invent store policies or business outcomes."
+    }
+  }
+}

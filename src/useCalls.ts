@@ -43,7 +43,11 @@ export function useCalls() {
       clearInterval(timer);
     };
   }, [latest?.id, latest?.status]);
-  async function start() {
+  async function start(options?: {
+    phone: string;
+    consent: boolean;
+    leadId?: string;
+  }) {
     if (starting) return;
     setStarting(true);
     setError("");
@@ -51,7 +55,7 @@ export function useCalls() {
       const c = await api<Call>("/api/calls", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requestId: crypto.randomUUID() }),
+        body: JSON.stringify({ requestId: crypto.randomUUID(), ...options }),
       });
       setCalls((rows) => [c, ...rows.filter((r) => r.id !== c.id)]);
       await load();
@@ -61,5 +65,5 @@ export function useCalls() {
       setStarting(false);
     }
   }
-  return { calls, config, error, starting, start, latest };
+  return { calls, config, error, starting, start, latest, reload: load };
 }

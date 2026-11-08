@@ -1,0 +1,13 @@
+{
+  "verifiedAt": "2026-11-08T14:17:18.275Z",
+  "source": "Hosted application → Bolna native future schedule → cancel",
+  "scheduledAt": "2026-11-09T10:00:00+05:30",
+  "appScheduledStatus": "scheduled",
+  "executionId": "2f9f9d48-f797-40d7-b73e-3e77cf2b3cf0",
+  "cancelAcknowledged": true,
+  "appFinalStatus": "canceled",
+  "providerFinalStatus": "stopped",
+  "recipient": "Authorized user phone; omitted",
+  "phoneRang": false,
+  "note": "Future call scheduled for 9 November 10:00 IST and canceled immediately on 8 November. No live callback conversation was executed."
+}

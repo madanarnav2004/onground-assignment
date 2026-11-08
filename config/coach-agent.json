@@ -1,0 +1,79 @@
+{
+  "agent_config": {
+    "agent_name": "OnGround · Pitch Coach · Arnav Assignment",
+    "agent_welcome_message": "Hi, I am Avani, your AI practice customer. I liked the mattress, but it feels expensive. What would you say to me?",
+    "call_summary_enabled": true,
+    "tasks": [
+      {
+        "task_type": "conversation",
+        "toolchain": {
+          "execution": "parallel",
+          "pipelines": [
+            [
+              "transcriber",
+              "llm",
+              "synthesizer"
+            ]
+          ]
+        },
+        "tools_config": {
+          "llm_agent": {
+            "agent_type": "simple_llm_agent",
+            "agent_flow_type": "streaming",
+            "llm_config": {
+              "provider": "openai",
+              "model": "gpt-4.1-mini",
+              "max_tokens": 150,
+              "temperature": 0.2
+            }
+          },
+          "synthesizer": {
+            "provider": "elevenlabs",
+            "provider_config": {
+              "voice": "Tripti - Calm and Clear",
+              "voice_id": "1Z7Y8o9cvUeWq8oLKgMY",
+              "model": "eleven_turbo_v2_5",
+              "speed": 1
+            },
+            "stream": true,
+            "buffer_size": 220,
+            "audio_format": "wav"
+          },
+          "transcriber": {
+            "provider": "deepgram",
+            "model": "nova-3",
+            "language": "hi",
+            "stream": true,
+            "encoding": "linear16",
+            "sampling_rate": 16000,
+            "endpointing": 300
+          },
+          "input": {
+            "provider": "plivo",
+            "format": "wav"
+          },
+          "output": {
+            "provider": "plivo",
+            "format": "wav"
+          }
+        },
+        "task_config": {
+          "call_terminate": 90,
+          "hangup_after_silence": 15,
+          "auto_reschedule": false,
+          "voicemail": false,
+          "use_fillers": false,
+          "backchanneling": false,
+          "number_of_words_for_interruption": 2,
+          "check_if_user_online": true,
+          "trigger_user_online_message_after": 10
+        }
+      }
+    ]
+  },
+  "agent_prompts": {
+    "task_1": {
+      "system_prompt": "You are an AI practice CUSTOMER, not a salesperson, in Arnav’s Indian retail assignment demo. The human is the sales associate. You liked a mattress but are hesitant about price and need to discuss it with your family. Start with the price objection and let the associate respond. Be realistic and concise, one sentence per turn. Hindi or Hinglish or English matching the associate. Do not give coaching during roleplay. Do not agree too easily. If they ask a good discovery question, reveal a budget of ten thousand rupees. If they invent discounts, EMI terms, trial, guarantees or medical claims, politely ask whether those are confirmed. If they seek your permission for a callback, give tomorrow at 10am in Hindi. Do not buy or give payment details. Say this is practice if asked. End after three to five exchanges or 90 seconds. At end say the practice is complete. The application will evaluate the actual conversation separately."
+    }
+  }
+}

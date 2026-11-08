@@ -1,0 +1,208 @@
+{
+  "checkedAt": "2026-11-08T14:09:56.723Z",
+  "origin": "https://onground-arnav.vercel.app",
+  "checks": [
+    {
+      "check": "public /api/state returns JSON and creates independent cookies",
+      "passed": true,
+      "firstStatus": 200,
+      "secondStatus": 200
+    },
+    {
+      "check": "new browser starts with no personal workspace data",
+      "passed": true
+    },
+    {
+      "check": "public / responds",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "public /proof responds",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "public /api/config responds",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "save internal channel message",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "channel message survives fresh request",
+      "passed": true
+    },
+    {
+      "check": "save callback request without scheduling",
+      "passed": true,
+      "status": 200
+    },
+    {
+      "check": "callback persists and no telephone operation occurred",
+      "passed": true
+    },
+    {
+      "check": "second browser does not inherit first browser data",
+      "passed": true
+    },
+    {
+      "check": "agent conversations persist",
+      "passed": true,
+      "conversationRoles": [
+        "avani"
+      ],
+      "practiceTurns": 0,
+      "coachingReviews": 0
+    },
+    {
+      "check": "second browser cannot read agent conversation or coaching",
+      "passed": true
+    }
+  ],
+  "agents": [
+    {
+      "role": "avani",
+      "mode": "assistant",
+      "status": 200,
+      "request": "What does Mukunda need next in this workspace? Distinguish the request from confirmed store availability.",
+      "response": {
+        "id": "babbd709-a219-4d95-8ff8-217cb871b5c3",
+        "answer": "Mukunda is considering the Ortho mattress and has a callback scheduled for November 9 at 10:00 AM in Hindi to discuss comfort, price, and monthly payments. No confirmed store availability is noted, so usual stock assumptions apply. A recommended next step is for the Call centre to prepare for the callback to assist Mukunda’s decision.",
+        "tasks": [],
+        "createdAt": "2026-11-08T14:10:10.288Z",
+        "role": "avani"
+      }
+    },
+    {
+      "role": "coach",
+      "mode": "roleplay",
+      "status": 409,
+      "request": "I understand the price feels high. What is the main thing you want from the mattress, and what budget would feel comfortable for you?",
+      "response": {
+        "error": "The workspace could not save this change. Please try again."
+      }
+    }
+  ],
+  "remaining": [
+    "Agent request failed; stopped further live requests.",
+    "Browser interaction, microphone/two-way audio and real scheduled-call execution are separate acceptance checks."
+  ],
+  "noTelephoneOrVoiceCallMade": true,
+  "noCallbackScheduled": true,
+  "testMethod": "Production HTTP requests with two fresh signed browser sessions. Roleplay inputs were written for QA; they were not a human voice conversation.",
+  "defects": [
+    {
+      "severity": "blocking",
+      "area": "agent persistence",
+      "observation": "The first coach roleplay request returned HTTP 409 with a generic workspace-save error after one successful Avani request. Remaining agent calls were stopped.",
+      "status": "Storage fix deployed; callback/message and three analytical writes succeeded with large state. Full approval regression still pending."
+    },
+    {
+      "severity": "high",
+      "area": "assistant factual boundary",
+      "observation": "Avani described a saved callback request with no executionId as scheduled, and introduced usual stock assumptions despite no inventory integration.",
+      "status": "Fixed and verified in production retest: requested only, not provider-scheduled; no stock availability asserted."
+    },
+    {
+      "severity": "high",
+      "area": "coach roleplay persona",
+      "observation": "Second roleplay reply spoke as the sales associate arranging a callback, rather than as the shopper. Analyst also returned irrelevant coach task proposals.",
+      "status": "Dedicated customer-role agent/extraction routing implemented, coach tasks suppressed; next deployment/live retest pending."
+    }
+  ],
+  "storageDiagnostic": {
+    "method": "Isolated private QA blob, no real workspace read",
+    "putAndGetEtagsMatch": true,
+    "conditionalWritesSucceeded": 2,
+    "caveat": "This does not rule out contention or read-staleness on the shared reservation ledger."
+  },
+  "retest": {
+    "checkedAt": "2026-11-08T14:16:23.770Z",
+    "checks": [
+      {
+        "check": "callback request saved without scheduling",
+        "passed": true,
+        "status": 200
+      },
+      {
+        "check": "large workspace message saved",
+        "passed": true,
+        "status": 200
+      }
+    ],
+    "agents": [
+      {
+        "role": "avani",
+        "mode": "assistant",
+        "request": "What does Mukunda need next? Is the saved callback requested or actually scheduled with the calling provider? What stock availability do we know?",
+        "status": 200,
+        "response": {
+          "id": "f9b5ad7e-397c-47c6-9e13-56ea2fb78312",
+          "answer": "Mukunda R. has requested a callback to discuss price and family decision; this callback is saved as requested only and not actually scheduled with a provider. We do not have any confirmed stock availability information for his Ortho mattress. Next, a call follow-up by the Call centre team to discuss Mukunda's concerns on price and family decision is recommended.",
+          "tasks": [
+            {
+              "leadId": "mukunda",
+              "title": "Follow up on price and family decision",
+              "reason": "Customer requested a callback to discuss price and family decision",
+              "owner": "Call centre"
+            }
+          ],
+          "createdAt": "2026-11-08T14:16:32.321Z",
+          "role": "avani"
+        }
+      },
+      {
+        "role": "coach",
+        "mode": "roleplay",
+        "request": "I understand the price feels high. What is the main thing you want from the mattress, and what budget would feel comfortable for you?",
+        "status": 200,
+        "response": {
+          "id": "e5e9e6c1-cc34-46b6-b556-dfa1940ce4cb",
+          "answer": "I like the mattress but I want to discuss the price with my family first before deciding.",
+          "tasks": [
+            {
+              "leadId": "mukunda",
+              "title": "Follow up on price and family decision discussion",
+              "reason": "Customer wanted to discuss mattress price and decision with family",
+              "owner": "Call centre"
+            }
+          ],
+          "createdAt": "2026-11-08T14:16:38.170Z",
+          "role": "coach"
+        }
+      },
+      {
+        "role": "coach",
+        "mode": "roleplay",
+        "request": "Thanks for sharing. I cannot promise a discount or EMI terms, but I can ask the store team to confirm options within your budget. Would you prefer a callback tomorrow at 10 am in Hindi?",
+        "status": 200,
+        "response": {
+          "id": "448c3067-ea7e-4c44-88d8-82d70876ff6e",
+          "answer": "I can arrange for the store team to follow up with you regarding price options. Would you like a callback tomorrow at 10 am in Hindi?",
+          "tasks": [
+            {
+              "leadId": "mukunda",
+              "title": "Follow up on price and family decision discussion",
+              "reason": "Customer wanted to discuss mattress price and decision with family",
+              "owner": "Call centre"
+            }
+          ],
+          "createdAt": "2026-11-08T14:16:44.349Z",
+          "role": "coach"
+        }
+      }
+    ],
+    "noTelephoneOrVoiceCallMade": true,
+    "noCallbackScheduled": true,
+    "method": "Fresh isolated signed sessions; QA-authored text practice, not a human voice conversation.",
+    "interruption": "The client TLS connection timed out while awaiting the feedback request. Its acceptance/result was not established; no automatic retry or later planned analytical request was made.",
+    "notCompleted": [
+      "Feedback response and score validation",
+      "ASM proposal approval after large state"
+    ]
+  }
+}
