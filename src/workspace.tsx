@@ -85,7 +85,7 @@ function Dialog({
       if (e.key === "Tab") {
         const list = Array.from(
           ref.current?.querySelectorAll<HTMLElement>(
-            "button:not([disabled]),input,textarea,select,a[href]",
+            "button:not([disabled]),input:not([disabled]),textarea:not([disabled]),select:not([disabled]),a[href],summary,audio[controls]",
           ) || [],
         );
         const first = list[0],
@@ -185,8 +185,10 @@ export function Workspace() {
     [callbackTime, setCallbackTime] = useState(""),
     [callbackNote, setCallbackNote] = useState(""),
     [callbackLanguage, setCallbackLanguage] = useState("Hindi");
-  const [month, setMonth] = useState(new Date(2026, 10, 1)),
-    [day, setDay] = useState(8),
+  const [month, setMonth] = useState(
+      () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    ),
+    [day, setDay] = useState(() => new Date().getDate()),
     [kudos, setKudos] = useState(false);
   const voice = useCalls();
   const selectedLead = leadIdx === null ? null : leads[leadIdx];
@@ -257,8 +259,8 @@ export function Workspace() {
       )?.id,
     };
     await setFollowups((rows) =>
-      existing
-        ? rows.map((f) => (f.id === existing.id ? value : f))
+      rows.some((f) => f.name === value.name)
+        ? rows.map((f) => (f.name === value.name ? { ...value, id: f.id } : f))
         : [...rows, value],
     );
     setCallback(null);
@@ -278,24 +280,30 @@ export function Workspace() {
       openCallback(handoffLead);
       return;
     }
-    await setFollowups((rows) => [
-      ...rows,
-      {
-        id: crypto.randomUUID(),
-        sourceCallId: call.id,
-        name: handoffLead.name,
-        date: draft.date,
-        time: draft.time,
-        language: draft.language,
-        note: [
-          draft.concern,
-          draft.budget ? `Customer budget: ${money(draft.budget)}.` : "",
-          "Store team to confirm availability.",
-        ]
-          .filter(Boolean)
-          .join(" "),
-      },
-    ]);
+    await setFollowups((rows) =>
+      rows.some(
+        (f) => f.sourceCallId === call.id || f.name === handoffLead.name,
+      )
+        ? rows
+        : [
+            ...rows,
+            {
+              id: crypto.randomUUID(),
+              sourceCallId: call.id,
+              name: handoffLead.name,
+              date: draft.date,
+              time: draft.time,
+              language: draft.language,
+              note: [
+                draft.concern,
+                draft.budget ? `Customer budget: ${money(draft.budget)}.` : "",
+                "Store team to confirm availability.",
+              ]
+                .filter(Boolean)
+                .join(" "),
+            },
+          ],
+    );
     setNotice(
       "Callback request saved from the call. Store confirmation is pending.",
     );
@@ -415,8 +423,9 @@ export function Workspace() {
             <button
               className="og-secondary"
               onClick={() => {
-                setMonth(new Date(2026, 10, 1));
-                setDay(8);
+                const today = new Date();
+                setMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+                setDay(today.getDate());
               }}
             >
               Today
@@ -485,7 +494,8 @@ export function Workspace() {
             <p className="og-muted">No events for this date.</p>
           )}
           <p className="og-footnote">
-            Local demo calendar. Mailbox syncing is not connected.
+            Your saved callback requests appear here. The store’s calendar is
+            not connected.
           </p>
         </section>
       </div>
@@ -2023,7 +2033,9 @@ export function Workspace() {
                 Date
                 <input
                   type="date"
-                  min="2026-11-08"
+                  min={new Date().toLocaleDateString("en-CA", {
+                    timeZone: "Asia/Kolkata",
+                  })}
                   required
                   value={callbackDate}
                   onChange={(e) => setCallbackDate(e.target.value)}

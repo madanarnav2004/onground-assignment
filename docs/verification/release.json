@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-11-08T14:24:17.676Z",
+  "productionUrl": "https://onground-arnav.vercel.app",
+  "repository": "https://github.com/madanarnav2004/onground-assignment",
+  "deploymentId": "dpl_2BjojrpBknoXLbCLF7LzeMsa44y2",
+  "state": "READY",
+  "region": "bom1",
+  "commit": "23758912998892c3df8db27220dc35f4496c82fb",
+  "publicRepository": true,
+  "defaultBranch": "codex/onground-calling",
+  "testsPassed": 30,
+  "nativeRecording": "blocked: Mac locked",
+  "humanAudio": "not yet independently verified"
+}

@@ -1,0 +1,29 @@
+{
+  "checkedAt": "2026-11-08T14:24:20.003Z",
+  "source": "Actual Bolna analysis response over QA-authored associate/customer practice; parsed locally without another model call",
+  "answer": "Your discovery efforts were strong with targeted questions about needs and budget. You showed empathy but a more personalized response could enhance connection. Accuracy was good by setting realistic expectations about discounts and EMI. Next steps were clearly defined with a callback proposal. To improve, consider a next line that explicitly confirms your follow-up action to increase customer assurance.",
+  "feedbackTextSource": "model",
+  "scores": [
+    {
+      "name": "discovery",
+      "score": 4,
+      "evidence": "What matters most to you in a mattress, and what budget would feel comfortable?"
+    },
+    {
+      "name": "empathy",
+      "score": null,
+      "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+    },
+    {
+      "name": "accuracy",
+      "score": null,
+      "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+    },
+    {
+      "name": "next_step",
+      "score": 4,
+      "evidence": "Would you like a staff callback tomorrow at ten in Hindi?"
+    }
+  ],
+  "betterLine": "I will check with our store team for options within your budget and follow up with you. Would you prefer a callback in Hindi tomorrow at 10 AM?"
+}

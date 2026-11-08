@@ -46,7 +46,7 @@ The DEMO strip and floating dial button are optional in the brief. Their absence
 
 ## Engineering checks
 
-- **22 tests pass:** hosted API contracts, isolation, duplicate/concurrent paid requests, durable reservations, uncertain calls, one-use human grants, event ordering, notes preservation, practice-run ownership, handoff evidence and storage validation.
+- **32 tests pass:** hosted API contracts, isolation, duplicate/concurrent paid requests, durable reservations, uncertain calls, one-use human grants, event ordering, notes preservation, practice-run ownership, handoff evidence and storage validation.
 - **TypeScript and production build pass.** These do not prove provider audio or hosted execution.
 - **Persistence:** private Vercel Blob with conditional writes; serialized atomic local JSON without a cloud token. Browser workspaces use signed HttpOnly cookies, not employee authentication.
 - **Calling controls:** consented own-number entry; no automatic retries; provider time limit; shared global caps of 5 phone / 5 web voice / 3 human / 70 analysis operations. Count caps are not a guaranteed monetary ceiling.

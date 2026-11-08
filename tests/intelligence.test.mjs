@@ -1,6 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { validateCoachingScores, reason } from "../server/intelligence.mjs";
+import {
+  validateCoachingScores,
+  reason,
+  parseCoachingFields,
+} from "../server/intelligence.mjs";
 const practice = [
   {
     speaker: "Associate",
@@ -123,4 +127,56 @@ test("customer roleplay uses its dedicated agent and dialogue without sales work
   );
   assert(!sent.transcript.includes("SENTINEL"));
   assert(!sent.transcript.includes("APPLICATION"));
+});
+test("managed scalar rubric fields use genuine model prose and source-matched evidence", () => {
+  const result = parseCoachingFields(
+    {
+      workspace_response: {
+        subjective:
+          "You asked useful discovery questions. Personalise the empathy a little more.",
+      },
+      assistant_answer: {
+        subjective:
+          '{"name":"discovery","score":4,"evidence":"What budget would feel comfortable for you?"}',
+      },
+      score_discovery: {
+        subjective: "4",
+        status: "completed",
+        reasoning_subjective:
+          "The associate asked: 'What budget would feel comfortable for you?'.",
+      },
+      better_line: {
+        subjective:
+          "What matters most to you, and which options should we ask the store to confirm?",
+      },
+    },
+    practice,
+  );
+  assert.equal(
+    result.answer,
+    "You asked useful discovery questions. Personalise the empathy a little more.",
+  );
+  assert.equal(result.scores[0].score, 4);
+  assert.equal(
+    result.scores[0].evidence,
+    "What budget would feel comfortable for you?",
+  );
+  assert(!result.answer.startsWith("{"));
+});
+test("managed scalar score without a matching associate quote stays unscored", () => {
+  const result = parseCoachingFields(
+    {
+      workspace_response: { subjective: "Try asking one clear question." },
+      score_empathy: {
+        subjective: "5",
+        status: "completed",
+        reasoning_subjective:
+          "The customer said 'My budget is ten thousand rupees.'",
+      },
+    },
+    practice,
+  );
+  assert.equal(result.scores[0].name, "empathy");
+  assert.equal(result.scores[0].score, null);
+  assert.equal(result.feedbackTextSource, "model");
 });

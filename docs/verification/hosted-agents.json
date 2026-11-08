@@ -204,5 +204,84 @@
       "Feedback response and score validation",
       "ASM proposal approval after large state"
     ]
+  },
+  "finalRetest": {
+    "checkedAt": "2026-11-08T14:21:59.484Z",
+    "checks": [
+      {
+        "check": "callback request saves without scheduling",
+        "passed": true
+      },
+      {
+        "check": "large workspace persists",
+        "passed": true
+      }
+    ],
+    "agents": [
+      {
+        "role": "avani",
+        "mode": "assistant",
+        "request": "What does Mukunda need next? Is this saved callback only requested or scheduled with the calling provider? What stock availability do we actually know?",
+        "requestId": "07e62625-a658-4ab8-bb08-6d7252679b1f",
+        "status": 200,
+        "response": {
+          "id": "07e62625-a658-4ab8-bb08-6d7252679b1f",
+          "answer": "Mukunda needs a follow-up callback to discuss mattress price and family decision. This callback is only saved as requested, not scheduled with a calling provider. We currently do not know any confirmed stock availability regarding Mukunda's mattress inquiry.",
+          "tasks": [
+            {
+              "leadId": "mukunda",
+              "title": "Follow up on mattress price and family decision",
+              "reason": "Customer requested callback to discuss price and family decision",
+              "owner": "Call centre"
+            }
+          ],
+          "createdAt": "2026-11-08T14:22:07.582Z",
+          "role": "avani"
+        }
+      },
+      {
+        "role": "coach",
+        "mode": "roleplay",
+        "request": "I understand the price feels high. What matters most to you in a mattress, and what budget would feel comfortable?",
+        "requestId": "9193d5d4-fb59-41ca-981b-4ab2ca9f1afc",
+        "status": 200,
+        "response": {
+          "id": "9193d5d4-fb59-41ca-981b-4ab2ca9f1afc",
+          "answer": "Mujhe apne parivaar se baat karni hogi, mera budget Rs 10000 hai.",
+          "tasks": [],
+          "createdAt": "2026-11-08T14:22:10.981Z",
+          "role": "coach"
+        }
+      },
+      {
+        "role": "coach",
+        "mode": "roleplay",
+        "request": "I can ask the store team to confirm options within your budget, but I cannot promise a discount or EMI terms. Would you like a staff callback tomorrow at ten in Hindi?",
+        "requestId": "0a414609-8155-403b-9f18-143c23283be7",
+        "status": 200,
+        "response": {
+          "id": "0a414609-8155-403b-9f18-143c23283be7",
+          "answer": "Ji haan, please have your store team call me kal subah 10 baje.",
+          "tasks": [],
+          "createdAt": "2026-11-08T14:22:14.211Z",
+          "role": "coach"
+        }
+      },
+      {
+        "role": "coach",
+        "mode": "feedback",
+        "request": "Review only my actual associate practice turns. Score demonstrated skills, quote my own words as evidence and give one better next line. Do not invent store terms.",
+        "requestId": "8bbdd544-6976-4ee1-8883-e586db609a39",
+        "status": 502,
+        "response": {
+          "error": "The assistant did not return an answer."
+        }
+      }
+    ],
+    "method": "Fresh isolated signed sessions. QA-authored text roleplay, not a human voice conversation.",
+    "noTelephoneOrVoiceCallMade": true,
+    "noCallbackScheduled": true,
+    "completed": false,
+    "interruption": "Agent returned 502"
   }
 }

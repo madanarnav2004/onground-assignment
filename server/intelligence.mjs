@@ -69,6 +69,84 @@ export function validateCoachingScores(candidates, practice) {
     });
 }
 
+function parseValue(value, fallback) {
+  try {
+    return JSON.parse(String(value).replace(/^```(?:json)?\s*|\s*```$/g, ""));
+  } catch {
+    return fallback;
+  }
+}
+function readableAnswer(value) {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const text = value.trim();
+  const parsed = parseValue(text, undefined);
+  if (parsed === undefined) return text;
+  if (typeof parsed === "string" && parsed.trim()) return parsed.trim();
+  if (parsed && typeof parsed === "object" && typeof parsed.answer === "string")
+    return parsed.answer.trim() || null;
+  // A valid rubric/task JSON object is data, not a readable coaching answer.
+  return null;
+}
+function supportedReasoningExcerpt(reasoning, practice) {
+  if (typeof reasoning !== "string") return "";
+  const text = normaliseEvidence(reasoning);
+  const turns = practice
+    .filter(
+      (turn) => turn?.speaker === "Associate" && typeof turn.text === "string",
+    )
+    .map((turn) => normaliseEvidence(turn.text));
+  const quoted = [...text.matchAll(/["“]([^"”]{3,})["”]|'([^']{3,})'/g)].map(
+    (match) => normaliseEvidence(match[1] || match[2]),
+  );
+  const candidates = [...quoted, ...turns.filter((turn) => text.includes(turn))]
+    .filter(
+      (excerpt) =>
+        excerpt.length >= 3 && turns.some((turn) => turn.includes(excerpt)),
+    )
+    .sort((a, b) => b.length - a.length);
+  return candidates[0] || "";
+}
+export function parseCoachingFields(fields, practice) {
+  const names = ["discovery", "empathy", "accuracy", "next_step"];
+  const candidates = names.map((name) => {
+    const field = fields["score_" + name];
+    if (!field || (field.status && field.status !== "completed")) return null;
+    const parsed = parseValue(field.subjective, null);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed))
+      return { ...parsed, name };
+    const score =
+      typeof parsed === "number"
+        ? parsed
+        : /^([0-5])(?:\s*\/\s*5)?$/.test(String(field.subjective).trim())
+          ? Number(String(field.subjective).trim()[0])
+          : null;
+    return {
+      name,
+      score,
+      evidence: supportedReasoningExcerpt(field.reasoning_subjective, practice),
+    };
+  });
+  const scores = validateCoachingScores(candidates, practice);
+  const betterLine = readableAnswer(fields.better_line?.subjective) || "";
+  const modelAnswer =
+    readableAnswer(fields.workspace_response?.subjective) ||
+    readableAnswer(fields.assistant_answer?.subjective);
+  const scoredSummary = scores
+    .filter((score) => score.score !== null)
+    .map((score) => `${score.name.replaceAll("_", " ")}: ${score.score}/5`)
+    .join(" · ");
+  return {
+    answer: modelAnswer || scoredSummary || betterLine || null,
+    feedbackTextSource: modelAnswer
+      ? "model"
+      : scoredSummary
+        ? "validated_model_scores"
+        : "model_suggested_line",
+    scores,
+    betterLine: betterLine.slice(0, 600),
+  };
+}
+
 export async function reason(role, input, state, leads) {
   const mode =
     role === "coach" && input.mode === "feedback"
@@ -175,36 +253,25 @@ export async function reason(role, input, state, leads) {
     { transcript, call_date: new Date().toISOString() },
   );
   const fields = result.extracted_data?.["Workspace reasoning"] || {};
-  const text = fields.assistant_answer?.subjective || findText(result);
+  const feedback =
+    role === "coach" && mode === "feedback"
+      ? parseCoachingFields(fields, practice)
+      : null;
+  const text =
+    feedback?.answer ||
+    readableAnswer(fields.assistant_answer?.subjective) ||
+    readableAnswer(findText(result));
   if (typeof text !== "string" || !text.trim())
     throw new CallError("The assistant did not return an answer.", 502);
-  const parse = (value, fallback) => {
-    try {
-      return JSON.parse(String(value).replace(/^```(?:json)?\s*|\s*```$/g, ""));
-    } catch {
-      return fallback;
-    }
-  };
-  let output = parse(text, { answer: text });
+  let output = parseValue(text, { answer: text });
   if (
     !output ||
     typeof output !== "object" ||
     typeof output.answer !== "string"
   )
     output = { answer: text };
-  output.tasks = parse(fields.action_proposals?.subjective, []);
-  if (role === "coach" && mode === "feedback") {
-    output.scores = validateCoachingScores(
-      ["discovery", "empathy", "accuracy", "next_step"].map((key) =>
-        parse(fields["score_" + key]?.subjective, null),
-      ),
-      practice,
-    );
-    output.betterLine = String(fields.better_line?.subjective || "").slice(
-      0,
-      600,
-    );
-  }
+  output.tasks = parseValue(fields.action_proposals?.subjective, []);
+  if (feedback) Object.assign(output, feedback);
   if (typeof output.answer !== "string")
     throw new CallError("The assistant response was incomplete.", 502);
   output.answer = output.answer.slice(0, 6000);

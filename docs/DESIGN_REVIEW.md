@@ -34,7 +34,7 @@ An important observed failure: the model labeled transliterated Hindi as exact c
 - Dashboard KPI cards, progress, earnings, tasks and seven-day charts remain accessible; passive performance is collapsed by default.
 - Plan still includes ranked outgoing leads, expandable rows/paging, incoming callback actions and recent call review.
 - Calendar retains month navigation, Today, dots and day details.
-- Pulse retains home/agents/channels/Kudos and the pinned two-action/reply-card pattern. Chat and replies remain local.
+- Pulse retains home/agents/channels/Kudos and the pinned two-action/reply-card pattern. Chat and replies are saved in a private reviewer workspace.
 - Lead modal still opens from dashboard tasks, pages between leads, shows fit/intent scores and expandable buying signals. Score mechanics and long summaries are secondary details.
 - Real telephone calling remains available. No mock source was copied.
 
@@ -42,6 +42,6 @@ This deliberately changes default dashboard prominence from the supplied screens
 
 ## Validation and limits
 
-Nine server tests pass, including no implied callback consent, invalid/missing model output, original customer evidence and uncertain-send protection. Local browser review checked the prepared actual-call result, exact transcript expansion, callback detail expansion, all required dashboard panels and charts, and 390px layouts without horizontal overflow. The existing saved-request path was exercised in the browser. The direct first-save path is implemented but was not separately exercised in a clean browser profile during this pass.
+The current suite has 32 passing tests, including no implied callback consent, invalid/missing model output, original customer evidence and uncertain-send protection. Local browser review checked the prepared actual-call result, exact transcript expansion, callback detail expansion, all required dashboard panels and charts, and 390px layouts without horizontal overflow. The existing saved-request path was exercised in the browser. The direct first-save path is implemented but was not separately exercised in a clean browser profile during this pass.
 
-Local callback tasks do not contact staff, schedule provider calls or send invitations. Hosted persistence/authentication, independent agent usability tests and measured time savings remain open.
+Callback requests remain separate from staff confirmations. The Follow-up agent can now schedule and cancel native provider calls, verified in the hosted app. Private hosted persistence, signed reviewer sessions and concurrent writes are implemented and checked. Independent agent usability tests and measured time savings remain open.

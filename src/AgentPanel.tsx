@@ -380,7 +380,7 @@ function Feedback({ result }: { result: Result }) {
                 <strong>{s.name.replaceAll("_", " ")}</strong>
                 <b>
                   {s.score === null ? "—" : s.score}
-                  <small>{s.score === null ? "unobserved" : " / 5"}</small>
+                  <small>{s.score === null ? "unscored" : " / 5"}</small>
                 </b>
               </div>
               <p>{s.evidence}</p>
