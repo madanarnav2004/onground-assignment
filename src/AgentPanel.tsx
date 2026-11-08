@@ -772,6 +772,15 @@ function Coach() {
     </>
   );
 }
+const retryableFollowup = (followup: Followup) =>
+  ["busy", "no-answer", "failed", "canceled", "stopped"].includes(
+    followup.status || "",
+  );
+const reviewableFollowup = (followup: Followup) =>
+  retryableFollowup(followup) ||
+  (!followup.executionId &&
+    !followup.callId &&
+    (!followup.status || followup.status === "requested"));
 function Followups({ onRecovery }: { onRecovery?: () => void }) {
   const { state, reload, ready } = useWorkspace();
   const [chosen, setChosen] = useState(""),
@@ -882,13 +891,15 @@ function Followups({ onRecovery }: { onRecovery?: () => void }) {
                 <p>{f.note || "No additional context saved."}</p>
               </details>
               <div className="ag-actions">
-                {!f.executionId ? (
+                {reviewableFollowup(f) ? (
                   <button
                     className="og-secondary"
                     onClick={() => choose(f)}
                     disabled={busy}
                   >
-                    Review & schedule
+                    {retryableFollowup(f)
+                      ? "Review & retry"
+                      : "Review & schedule"}
                     <ArrowRight size={13} />
                   </button>
                 ) : (
@@ -912,16 +923,27 @@ function Followups({ onRecovery }: { onRecovery?: () => void }) {
           ))}
         </div>
       )}
-      {selected && !selected.executionId && (
+      {selected && reviewableFollowup(selected) && (
         <section className="ag-schedule">
           <div className="ag-section-head">
-            <span>REVIEW BEFORE CALLING</span>
+            <span>
+              {retryableFollowup(selected)
+                ? "REVIEW MANUAL RETRY"
+                : "REVIEW BEFORE CALLING"}
+            </span>
             <small>{selected.name}</small>
           </div>
           <p>
             This AI callback goes to <strong>your test phone</strong>, using the
             saved shopper context.
           </p>
+          {retryableFollowup(selected) && (
+            <p className="ag-notice">
+              Previous attempt: {statusLabel(selected.status || "")}. Nothing
+              retries automatically. Review your phone and consent, then choose
+              when to try again.
+            </p>
+          )}
           <PhoneFields
             {...{ phone, setPhone, consent, setConsent }}
             disabled={busy}
@@ -964,7 +986,11 @@ function Followups({ onRecovery }: { onRecovery?: () => void }) {
               onClick={() => void run(true)}
             >
               <Clock size={15} />
-              {busy ? "Submitting…" : "Schedule AI callback"}
+              {busy
+                ? "Submitting…"
+                : retryableFollowup(selected)
+                  ? "Schedule another attempt"
+                  : "Schedule AI callback"}
             </button>
             <button
               className="og-secondary"
@@ -972,7 +998,9 @@ function Followups({ onRecovery }: { onRecovery?: () => void }) {
               onClick={() => void run(false)}
             >
               <Phone size={14} />
-              Call now instead
+              {retryableFollowup(selected)
+                ? "Call again now"
+                : "Call now instead"}
             </button>
           </div>
         </section>

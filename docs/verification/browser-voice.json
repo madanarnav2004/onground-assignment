@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-11-08T14:59:13.773Z",
+  "provider": "Bolna",
+  "flow": "Browser microphone to AI practice customer",
+  "agentRole": "coach",
+  "executionStatus": "completed",
+  "durationSeconds": 31.9,
+  "reportedCostUSCents": 5.5,
+  "terminationReason": "user_hung_up",
+  "transcriptReady": true,
+  "transcriptTurns": {
+    "associate": 2,
+    "practiceCustomer": 3,
+    "total": 5
+  },
+  "actualPracticeTurnsStored": 5,
+  "feedback": {
+    "saved": true,
+    "scoreCount": 4,
+    "hasBetterLine": true,
+    "source": "Saved current workspace coaching result",
+    "createdAt": "2026-11-08T14:58:35.548Z",
+    "afterExecutionFinalized": true,
+    "scoredDimensions": 3,
+    "unscoredDimensions": 1,
+    "scoredEvidenceVerbatimMatches": 3
+  },
+  "notEstablished": [
+    "Independent-user microphone and network acceptance",
+    "Telephone calling from this browser voice flow"
+  ]
+}

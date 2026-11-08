@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -42,6 +42,8 @@ test("hosted API isolates workspaces and reserves every paid operation exactly o
   let providerCalls = 0,
     minted = 0,
     executionLookups = 0;
+  const executionResults = new Map();
+  let executionHook;
   globalThis.fetch = async (url, init) => {
     if (String(url).startsWith("https://api.vobiz.ai")) {
       assert(String(url).endsWith("/JWT/Token/"));
@@ -82,7 +84,11 @@ test("hosted API isolates workspaces and reserves every paid operation exactly o
       }
       if (String(url).includes("/executions/")) {
         executionLookups++;
-        return new Response(JSON.stringify({ status: "completed" }));
+        const id = String(url).split("/").pop();
+        const value = executionHook
+          ? await executionHook(id)
+          : executionResults.get(id) || { status: "completed" };
+        return new Response(JSON.stringify(value));
       }
       throw Error("Unexpected provider operation");
     }
@@ -217,6 +223,150 @@ test("hosted API isolates workspaces and reserves every paid operation exactly o
     },
   );
   await t.test(
+    "a busy follow-up can be retried manually while old results cannot replace the latest attempt",
+    async () => {
+      const cookie = (await request("/api/state")).cookie;
+      const followup = {
+        id: randomUUID(),
+        name: "Mukunda R.",
+        date: "2026-11-09",
+        time: "10:00",
+        language: "Hindi",
+        note: "Fixture callback request",
+      };
+      assert.equal(
+        (
+          await request("/api/workspace", {
+            cookie,
+            body: { field: "followups", value: [followup] },
+          })
+        ).status,
+        200,
+      );
+      const firstInput = {
+        requestId: randomUUID(),
+        phone: "+919999999999",
+        consent: true,
+        followupId: followup.id,
+      };
+      const countBefore = providerCalls;
+      const first = await request("/api/calls", { cookie, body: firstInput });
+      assert.equal(first.status, 200);
+      assert.equal(first.data.status, "queued");
+      let releaseLate, started;
+      const startedPromise = new Promise((resolve) => {
+        started = resolve;
+      });
+      const lateResult = new Promise((resolve) => {
+        releaseLate = resolve;
+      });
+      let firstLookup = true;
+      executionHook = async (id) => {
+        if (id === first.data.executionId && firstLookup) {
+          firstLookup = false;
+          started();
+          return lateResult;
+        }
+        return (
+          executionResults.get(id) || {
+            status: "busy",
+            conversation_duration: 0,
+          }
+        );
+      };
+      const delayedRefresh = request("/api/calls/" + first.data.id, { cookie });
+      await startedPromise;
+      assert.equal(
+        (await request("/api/calls/" + first.data.id, { cookie })).data.status,
+        "busy",
+      );
+      const originalNow = Date.now;
+      try {
+        const afterCooldown = originalNow() + 61000;
+        Date.now = () => afterCooldown;
+        const retryInput = { ...firstInput, requestId: randomUUID() };
+        const retry = await request("/api/calls", { cookie, body: retryInput });
+        assert.equal(retry.status, 200);
+        assert.notEqual(retry.data.id, first.data.id);
+        assert.equal(providerCalls, countBefore + 2);
+        releaseLate({ status: "failed", conversation_duration: 0 });
+        await delayedRefresh;
+        let saved = (await request("/api/state", { cookie })).data;
+        assert.equal(
+          saved.calls.length,
+          2,
+          "retry keeps the original call in history",
+        );
+        assert.equal(saved.followups[0].callId, retry.data.id);
+        assert.equal(
+          saved.followups[0].status,
+          "queued",
+          "late old result cannot overwrite the new attempt",
+        );
+        const duplicate = await request("/api/calls", {
+          cookie,
+          body: firstInput,
+        });
+        assert.equal(duplicate.status, 200);
+        assert.equal(duplicate.data.id, first.data.id);
+        assert.equal(providerCalls, countBefore + 2);
+        assert.equal(
+          (
+            await request("/api/calls", {
+              cookie,
+              body: { ...firstInput, requestId: randomUUID() },
+            })
+          ).status,
+          409,
+          "active retry blocks another attempt",
+        );
+        executionHook = undefined;
+        executionResults.set(retry.data.executionId, {
+          status: "completed",
+          conversation_duration: 10,
+        });
+        assert.equal(
+          (await request("/api/calls/" + retry.data.id, { cookie })).data
+            .status,
+          "completed",
+        );
+        assert.equal(
+          (
+            await request("/api/calls", {
+              cookie,
+              body: { ...firstInput, requestId: randomUUID() },
+            })
+          ).status,
+          409,
+          "completed callbacks cannot be retried",
+        );
+        // Seed the uncertain provider state as a fixture, then assert the public
+        // action still fails closed instead of treating uncertainty as failure.
+        const sid = cookie.split("=")[1].split(".")[0],
+          path = join("data/workspaces", sid + ".json");
+        saved = JSON.parse(await readFile(path, "utf8"));
+        saved.calls.find((c) => c.id === retry.data.id).status = "unknown";
+        saved.followups[0].status = "unknown";
+        await writeFile(path, JSON.stringify(saved));
+        assert.equal(
+          (
+            await request("/api/calls", {
+              cookie,
+              body: { ...firstInput, requestId: randomUUID() },
+            })
+          ).status,
+          409,
+          "unknown acceptance cannot be retried",
+        );
+        assert.equal(providerCalls, countBefore + 2);
+      } finally {
+        Date.now = originalNow;
+        executionHook = undefined;
+        releaseLate({ status: "failed" });
+      }
+    },
+  );
+  await t.test(
     "a consumed mint request is never minted again, including parallel requests",
     async () => {
       const id = randomUUID(),
@@ -268,12 +418,13 @@ test("hosted API isolates workspaces and reserves every paid operation exactly o
         ([, op]) => op.type === "web-session",
       );
       assert(op);
+      const lookupsBefore = executionLookups;
       const r = await request("/api/web-result", {
         cookie: b,
         body: { requestId: op[0], executionId: randomUUID() },
       });
       assert.equal(r.status, 404);
-      assert.equal(executionLookups, 0);
+      assert.equal(executionLookups, lookupsBefore);
     },
   );
   await t.test(

@@ -53,4 +53,4 @@ Arnav chose the scenario, reviewed the opening, participated in the phone call, 
 
 Desk research and one roleplay informed the Indian retail choices. They do not replace interviews with multiple stores. The demo has no live inventory, WhatsApp, staff calendar or independently measured conversion uplift. Trial telephone recipients may need provider verification. Shared count-based allowances bound demo use, but do not guarantee a rupee-denominated cap.
 
-The release checklist must keep the final evidence honest: 36 passing tests, a compiled build, registration, browser interaction, real audio and a scheduled callback each validate different parts of the system.
+The release checklist must keep the final evidence honest: 37 passing tests, a compiled build, registration, browser interaction, real audio and a scheduled callback each validate different parts of the system.

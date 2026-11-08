@@ -1,0 +1,14 @@
+{
+  "verifiedAt": "2026-11-08T15:09:08.402Z",
+  "source": "Authorized manual retry in a fresh review workspace through the same hosted app request→followup→call→refresh path; no automatic redial",
+  "role": "Follow-up agent",
+  "status": "completed",
+  "executionId": "ea1a2df7-6781-4a81-81c7-5db5f44b5f48",
+  "durationSeconds": 90,
+  "costUSCents": 9,
+  "transcriptPresent": true,
+  "summaryPresent": true,
+  "handoffDraftPresent": true,
+  "recipient": "Authorized participant, full number omitted",
+  "note": "The earlier busy result is preserved. User separately authorized this one retry."
+}

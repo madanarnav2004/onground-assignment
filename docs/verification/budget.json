@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-11-08T15:15:19.404Z",
+  "authorizedTestBudgetINR": 200,
+  "bolna": {
+    "initialWalletUSCents": 500,
+    "currentWalletUSCents": 476.5,
+    "observedWalletDeltaUSCents": 23.5
+  },
+  "vobiz": {
+    "initialBalanceINR": 25,
+    "currentBalanceINR": 24.24,
+    "availableBalanceINR": 24.24,
+    "observedLedgerDeltaINR": 0.76,
+    "reservedFundsINR": 0
+  },
+  "noNumbersPurchased": true,
+  "noPlanUpgrades": true,
+  "exchangeRateNotAssumed": true,
+  "note": "Final provider wallet deltas after the completed real follow-up and human call. These are provider-reported charges, not bank-settled amounts. No exchange rate has been assumed.",
+  "completedFollowupIncluded": true,
+  "includedCompletedCallingCharges": [
+    {
+      "flow": "Walk-out recovery",
+      "reportedCostUSCents": 9
+    },
+    {
+      "flow": "Browser voice practice",
+      "reportedCostUSCents": 5.5
+    },
+    {
+      "flow": "Follow-up callback",
+      "reportedCostUSCents": 9
+    }
+  ],
+  "earlierBusyAttempt": {
+    "providerStatus": "busy",
+    "reportedCostUSCents": 0,
+    "automaticRetry": false,
+    "note": "The completed retry was separately authorized by the participant."
+  }
+}

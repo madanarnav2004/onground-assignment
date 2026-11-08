@@ -16,6 +16,34 @@ const store = new Store();
 const now = () => new Date().toISOString();
 const CLOSED = new Set([...TERMINAL, "ended"]);
 const active = (c) => !CLOSED.has(c.status) && c.status !== "scheduled";
+const MANUAL_RETRYABLE = new Set([
+  "busy",
+  "no-answer",
+  "failed",
+  "canceled",
+  "stopped",
+]);
+function checkFollowupAttempt(followup, calls) {
+  if (
+    !followup.executionId &&
+    !followup.callId &&
+    (!followup.status || followup.status === "requested")
+  )
+    return;
+  const latest = calls.find(
+    (call) => call.id === followup.callId && call.followupId === followup.id,
+  );
+  if (
+    !latest ||
+    !MANUAL_RETRYABLE.has(latest.status) ||
+    !MANUAL_RETRYABLE.has(followup.status)
+  )
+    err(
+      "This callback already has a call. Only a busy, unanswered, failed or canceled attempt can be retried manually.",
+      409,
+    );
+}
+
 const callingEnabled = () => {
   if (process.env.CALLING_ENABLED !== "true")
     err("Demo calling is paused by its owner.", 503);
@@ -167,7 +195,7 @@ async function refreshCall(sid, id) {
   if (c.followupId)
     await mutate(sid, (s) => {
       const f = s.followups.find((f) => f.id === c.followupId);
-      if (f)
+      if (f && f.callId === id)
         f.status = TERMINAL.has(x.status)
           ? x.status
           : c.scheduledAt && Date.parse(c.scheduledAt) > Date.now()
@@ -199,7 +227,7 @@ async function startCall(sid, input) {
   if (input.followupId) {
     f = s.followups.find((f) => f.id === input.followupId);
     if (!f) err("Callback request not found.");
-    if (f.executionId) err("This callback already has a scheduled call.", 409);
+    checkFollowupAttempt(f, s.calls);
   }
   let scheduledAt;
   if (input.scheduledAt) {
@@ -238,8 +266,17 @@ async function startCall(sid, input) {
         "A call is still active or uncertain. Resolve it before starting another.",
         409,
       );
-    if (f && s.followups.find((x) => x.id === f.id)?.executionId)
-      err("This callback already has a scheduled call.", 409);
+    if (f) {
+      const current = s.followups.find((x) => x.id === f.id);
+      if (!current) err("Callback request not found.", 404);
+      checkFollowupAttempt(current, s.calls);
+      // Claim this exact attempt before dialing. Old call records stay in the
+      // ledger, but a delayed result may update only its own latest request.
+      current.callId = id;
+      current.status = "submitting";
+      delete current.executionId;
+      delete current.scheduledAt;
+    }
     s.calls.push(c);
   });
   try {
@@ -262,22 +299,29 @@ async function startCall(sid, input) {
     });
     if (f)
       await mutate(sid, (s) => {
-        Object.assign(s.followups.find((x) => x.id === f.id) || {}, {
-          executionId: result.execution_id,
-          callId: id,
-          status: scheduledAt ? "scheduled" : "queued",
-          scheduledAt,
-        });
+        const current = s.followups.find((x) => x.id === f.id);
+        if (current?.callId === id)
+          Object.assign(current, {
+            executionId: result.execution_id,
+            status: scheduledAt ? "scheduled" : "queued",
+            scheduledAt,
+          });
       });
     return out;
   } catch (e) {
-    return patchCall(sid, id, {
+    const out = await patchCall(sid, id, {
       status: "unknown",
       error:
         e instanceof CallError
           ? e.message
           : "Could not confirm acceptance. Check provider history; do not retry automatically.",
     });
+    if (f)
+      await mutate(sid, (s) => {
+        const current = s.followups.find((x) => x.id === f.id);
+        if (current?.callId === id) current.status = "unknown";
+      });
+    return out;
   }
 }
 async function vobiz(path, request) {
@@ -473,7 +517,7 @@ export async function handler(req, res) {
               ...f,
               note: clean(f.note),
               status: old?.status || "requested",
-              ...(old?.executionId
+              ...(old?.callId || old?.executionId
                 ? {
                     executionId: old.executionId,
                     callId: old.callId,
@@ -671,7 +715,7 @@ export async function handler(req, res) {
       await patchCall(sid, c.id, { status: "canceled" });
       await mutate(sid, (s) => {
         const f = s.followups.find((f) => f.id === c.followupId);
-        if (f) {
+        if (f && f.callId === c.id) {
           f.status = "canceled";
         }
       });

@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-11-08T15:02:00.610Z",
+  "provider": "Vobiz",
+  "flow": "Human browser microphone to authorized mobile phone",
+  "sampleLead": "Faizan",
+  "workspaceStatus": "completed",
+  "workspaceTalkSeconds": 27,
+  "providerCDR": {
+    "browserLeg": {
+      "direction": "inbound",
+      "answeredAt": "2026-11-08T14:59:58Z",
+      "endedAt": "2026-11-08T15:00:26Z",
+      "totalDurationSeconds": 36,
+      "talkSeconds": 28,
+      "reportedCost": 0.38,
+      "currency": "INR",
+      "hangupCause": "NORMAL_CLEARING"
+    },
+    "phoneLeg": {
+      "direction": "outbound",
+      "answeredAt": "2026-11-08T14:59:58Z",
+      "endedAt": "2026-11-08T15:00:25Z",
+      "totalDurationSeconds": 33,
+      "talkSeconds": 27,
+      "reportedCost": 0.38,
+      "currency": "INR",
+      "hangupCause": "NORMAL_CLEARING"
+    },
+    "sumOfReportedLegCostsINR": 0.76
+  },
+  "twoWayAudio": {
+    "confirmedBy": "Authorized test participant Arnav",
+    "statement": "Both directions work",
+    "basis": "Explicit user report after answering the actual test call, not inferred from provider status"
+  },
+  "outcomeSaved": true,
+  "notesSaved": true,
+  "notesBasis": "Human entered outcome; not an AI-extracted customer statement",
+  "providerLifecycle": [
+    {
+      "status": "in-progress",
+      "at": "2026-11-08T14:59:58.804Z"
+    },
+    {
+      "status": "ended",
+      "at": "2026-11-08T15:00:25.111Z"
+    },
+    {
+      "status": "completed",
+      "at": "2026-11-08T15:00:26.153Z"
+    }
+  ],
+  "notEstablished": [
+    "Independent-user or broader-network acceptance",
+    "Inbound phone-to-browser calling on the trial account"
+  ]
+}
