@@ -54,7 +54,41 @@
     "recipientAndSubjectMatchPreparedCopy": true
   },
   "limitations": [
-    "Media stream presence and file identity checked; this check does not replace viewing and listening to the recording.",
-    "Parent is updating final human-authored package copy; any subsequent source changes need a final push."
-  ]
+    "Initial git-head snapshot above precedes final README/Calendar publication; finalPublishedCheck identifies the tested release.",
+    "The recording uses clearly labelled dated real-call playback. Original-mock full click-through and independent latest-Chrome verification are not established by saved evidence.",
+    "Provider trial verification and shared demo allowances remain explicit; email is prepared but not sent."
+  ],
+  "finalPublishedCheck": {
+    "checkedAt": "2026-11-08T15:44:44.491670+00:00",
+    "deployedSourceCommit": "c5a65c230cf5ba6ce0a6ab3a2e269cef7d60c082",
+    "deploymentId": "dpl_GCDC1grfNjiJg96TJnFwj2PX8DGH",
+    "state": "READY",
+    "unauthenticatedHTTP": {
+      "app": {
+        "status": 200,
+        "contentType": "text/html; charset=utf-8"
+      },
+      "api": {
+        "status": 200,
+        "contentType": "application/json",
+        "jsonParsed": true
+      },
+      "video": {
+        "status": 200,
+        "contentType": "video/mp4",
+        "sha256": "3b64310b8bb174f88693531c1dd2c206b07a44e2b515222a2882cdb63322bc4b",
+        "matchesLocal": true
+      },
+      "repo": {
+        "status": 200,
+        "contentType": "application/json; charset=utf-8",
+        "private": false,
+        "branch": "codex/onground-calling"
+      }
+    },
+    "hostedCalendar": "Today returns to current IST date; December 9 shows No events; November sample events bounded to exact 2026 dates in source",
+    "testsPassed": 37,
+    "buildPassed": true,
+    "errorLogScan": "No error/fatal logs on this deployment during the final 15-minute window"
+  }
 }

@@ -1,9 +1,9 @@
 {
-  "verifiedAt": "2026-11-08T15:33:11.140Z",
+  "verifiedAt": "2026-11-08T15:44:44.491670+00:00",
   "productionUrl": "https://onground-arnav.vercel.app",
   "repository": "https://github.com/madanarnav2004/onground-assignment",
   "videoUrl": "https://onground-arnav.vercel.app/submission.mp4",
-  "runtimeCodeCommit": "eb84ed5",
+  "runtimeCodeCommit": "c5a65c230cf5ba6ce0a6ab3a2e269cef7d60c082",
   "testsPassed": 37,
   "buildPassed": true,
   "region": "bom1",
@@ -20,8 +20,8 @@
     "evidence": "docs/verification/recording.json"
   },
   "emailSent": false,
-  "deploymentId": "dpl_33fB6YR23o9uzd7Ya9M2RNc1JXWG",
-  "deployedSourceCommit": "09b63087f4a037104d09cd29bc20ed36e0bccf3a",
+  "deploymentId": "dpl_GCDC1grfNjiJg96TJnFwj2PX8DGH",
+  "deployedSourceCommit": "c5a65c230cf5ba6ce0a6ab3a2e269cef7d60c082",
   "state": "READY",
   "publicChecks": {
     "app": 200,
@@ -30,5 +30,14 @@
     "videoContentType": "video/mp4",
     "downloadedVideoHashMatches": true,
     "githubVisibility": "PUBLIC"
-  }
+  },
+  "freshPDFReview": {
+    "sha256": "7ebebe209693181568b1f462887596dfe7358a76cc06d0279c702b3033e60b2e",
+    "pages": 5,
+    "audit": "docs/DELIVERABLE_AUDIT.md",
+    "allNamedMustBuildFeatures": true,
+    "listedBonuses": 5,
+    "calendarFixesVerifiedInHostedUI": true
+  },
+  "postDeployErrorsFound": 0
 }
