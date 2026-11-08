@@ -27,16 +27,16 @@ Native recording is prepared with microphone off, but no screen recording has be
 
 ## Final acceptance gates
 
-- [ ] Deployed production URL independently loads.
+- [x] Deployed production URL independently loads.
 - [ ] Dashboard, ranked/expandable/paged queue, Incoming, Recent/review, Calendar, Pulse/channel and Leads modal checked in the hosted build.
 - [ ] Channel send, pinned response, practice and callback journeys checked.
 - [ ] Phone-width navigation and charts checked; sample data remains labelled.
 - [ ] Recovery, Pitch Coach, ASM, human tele-caller, follow-up execution and AvaniBot each have their actual verified status recorded. Account restrictions remain explicit.
-- [ ] Real telephone call evidence is accessible in the app or recording without exposing the participant’s full number or credentials.
-- [ ] Hosted persistence and separate reviewer sessions checked.
+- [x] Real telephone call evidence is accessible in the app, with the full number and credentials omitted.
+- [x] Hosted persistence and separate reviewer sessions checked.
 - [ ] Provider errors and exhausted allowances never appear as completed calls.
-- [ ] Tests and production build pass at the published revision.
-- [ ] Repository and share links open for a reviewer without owner permissions.
+- [x] Tests and production build pass (36 tests); final published revision tracked in verification/release.json.
+- [x] Public app and repository open for a reviewer without owner permissions. Recording link remains pending.
 - [ ] Recording runtime verified at or below two minutes.
 - [ ] README and submission email use final links and accurate completion claims.
 
@@ -51,8 +51,8 @@ Hi Rashmi,
 
 Sharing my On-Ground engineering assignment:
 
-- Live app: [final app link]
-- GitHub: [final repository link]
+- Live app: https://onground-arnav.vercel.app
+- GitHub: https://github.com/madanarnav2004/onground-assignment
 - Demo recording, under two minutes: [final video link]
 
 I recreated the required Call Centre journeys and shaped the interface around the associate’s next useful action. The demo focuses on Indian retail walk-out recovery: understanding an objection, preserving language and callback context, and keeping store confirmation explicit.

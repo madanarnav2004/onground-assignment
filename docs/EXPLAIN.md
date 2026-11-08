@@ -37,7 +37,7 @@ The labels represent different jobs, rather than six copies of the same chat int
 
 **Scheduled work.** Bolna receives an explicit scheduled time after approval. The provider executes it after the page closes. There is no local timer masquerading as autonomous follow-up, and no automatic redial policy.
 
-**Pragmatic reasoning integration.** ASM, AvaniBot and text coaching use GPT-4.1-mini through Bolna’s configured disposition-analysis test interface. The input is a workspace snapshot or practice conversation; answer/proposal/rubric fields are validated. Reusing the configured provider kept the assignment within the available account setup. It is a constrained analytical integration, not a new general-purpose model service. A production iteration should give this a dedicated typed reasoning API and evaluations.
+**Dedicated reasoning integration.** ASM, AvaniBot and text coaching use Llama 3.3 JSON mode through an authenticated Workers AI service. Vercel supplies bounded workspace context and validates structured output, canonical lead IDs and exact supporting evidence. This replaced an unreliable reuse of voice-provider extraction for general reasoning. Voice agents remain on Bolna. Task approval is a separate server action, so an answer cannot silently execute a proposal.
 
 ## Show evidence in the right order
 
@@ -53,4 +53,4 @@ Arnav chose the scenario, reviewed the opening, participated in the phone call, 
 
 Desk research and one roleplay informed the Indian retail choices. They do not replace interviews with multiple stores. The demo has no live inventory, WhatsApp, staff calendar or independently measured conversion uplift. Trial telephone recipients may need provider verification. Shared count-based allowances bound demo use, but do not guarantee a rupee-denominated cap.
 
-The release checklist must keep the final evidence honest: 32 passing tests, a compiled build, registration, browser interaction, real audio and a scheduled callback each validate different parts of the system.
+The release checklist must keep the final evidence honest: 36 passing tests, a compiled build, registration, browser interaction, real audio and a scheduled callback each validate different parts of the system.

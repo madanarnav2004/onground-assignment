@@ -4,7 +4,7 @@ This is an independently built React and TypeScript implementation of the On-Gro
 
 ## A useful first pass
 
-1. **Dashboard → Hot leads → Mukunda.** Open the lead, inspect the buying signals, and move to the next lead. Required metrics and seven-day trends are available under expansions so the working view stays focused.
+1. **Dashboard → Review allocated leads → Mukunda.** Open the lead, inspect the buying signals, and move to the next lead. Required metrics and seven-day trends are available under expansions so the working view stays focused.
 2. **Calls to make → Incoming → Recent.** Expand a queue row, change pages, and open a recent call. Incoming rows expose a callback action. Actual calls show their provider status and finalized result; sample history stays labelled.
 3. **Calendar.** Switch months, return to Today, and select a dotted day. A saved callback request appears in the agenda. A request is distinct from an executed call or a confirmed store booking.
 4. **Pulse.** Open a channel, answer its pinned request using either button or a typed reply, then send a message. These changes are scoped to this browser’s demo workspace; no external store team is messaged.

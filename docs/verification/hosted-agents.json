@@ -1,4 +1,22 @@
 {
+  "currentAcceptanceSummary": {
+    "verifiedAt": "2026-11-08T14:40:32.906Z",
+    "deploymentCommit": "9d07eb9",
+    "productionUrl": "https://onground-arnav.vercel.app",
+    "publicSource": "https://github.com/madanarnav2004/onground-assignment",
+    "status": "passed",
+    "currentTextIntelligenceProvider": "Cloudflare Workers AI, Llama 3.3 JSON mode",
+    "hostedCurrentProviderChecksPassed": 11,
+    "testsPassed": 36,
+    "scope": "Production HTTP acceptance of isolated workspaces, current-provider roleplay/feedback/Avani/ASM, task approval/completion and reload. Text practice inputs were QA-authored.",
+    "remaining": [
+      "Two-way human browser/telephone audio",
+      "Browser voice-practice microphone/audio",
+      "Native submission screen recording"
+    ],
+    "noTelephoneOrVoiceCallMadeByTheseChecks": true,
+    "note": "Earlier attempts below retain the diagnostic history. Current release acceptance is in workersAcceptance."
+  },
   "checkedAt": "2026-11-08T14:09:56.723Z",
   "origin": "https://onground-arnav.vercel.app",
   "checks": [
@@ -52,9 +70,7 @@
     {
       "check": "agent conversations persist",
       "passed": true,
-      "conversationRoles": [
-        "avani"
-      ],
+      "conversationRoles": ["avani"],
       "practiceTurns": 0,
       "coachingReviews": 0
     },
@@ -99,19 +115,19 @@
       "severity": "blocking",
       "area": "agent persistence",
       "observation": "The first coach roleplay request returned HTTP 409 with a generic workspace-save error after one successful Avani request. Remaining agent calls were stopped.",
-      "status": "Storage fix deployed; callback/message and three analytical writes succeeded with large state. Full approval regression still pending."
+      "status": "Resolved: strong ETag cloud read fix, regression test and production large-state task approval/completion all passed."
     },
     {
       "severity": "high",
       "area": "assistant factual boundary",
       "observation": "Avani described a saved callback request with no executionId as scheduled, and introduced usual stock assumptions despite no inventory integration.",
-      "status": "Fixed and verified in production retest: requested only, not provider-scheduled; no stock availability asserted."
+      "status": "Resolved: authoritative current facts and explicit requested-date fields; final Workers AI production answer distinguished requested from scheduled and asserted no stock availability."
     },
     {
       "severity": "high",
       "area": "coach roleplay persona",
       "observation": "Second roleplay reply spoke as the sales associate arranging a callback, rather than as the shopper. Analyst also returned irrelevant coach task proposals.",
-      "status": "Dedicated customer-role agent/extraction routing implemented, coach tasks suppressed; next deployment/live retest pending."
+      "status": "Resolved in the hosted dedicated Workers AI route: roleplay answered as the shopper and coach responses contained no sales task proposals."
     }
   ],
   "storageDiagnostic": {
@@ -283,5 +299,345 @@
     "noCallbackScheduled": true,
     "completed": false,
     "interruption": "Agent returned 502"
+  },
+  "finalAcceptance": {
+    "checkedAt": "2026-11-08T14:27:37.907Z",
+    "deploymentCommit": "ff59bb9",
+    "checks": [
+      {
+        "check": "same QA session retains two associate practice turns",
+        "passed": true,
+        "associateTurns": 2
+      },
+      {
+        "check": "feedback is readable genuine model feedback",
+        "passed": true,
+        "feedbackTextSource": "model_suggested_line",
+        "scoreCount": 4
+      },
+      {
+        "check": "ASM proposes tasks before creating them",
+        "passed": false,
+        "proposalCount": 0
+      },
+      {
+        "check": "ASM task approval succeeds after large agent history",
+        "passed": true,
+        "status": 200,
+        "savedTaskCount": 0
+      },
+      {
+        "check": "repeated approval does not duplicate tasks",
+        "passed": true,
+        "status": 200,
+        "savedTaskCount": 0
+      },
+      {
+        "check": "practice review and all agent conversations persist",
+        "passed": true,
+        "coachingReviews": 1,
+        "conversationRoles": ["avani", "coach", "asm"],
+        "taskCount": 0
+      },
+      {
+        "check": "second browser cannot read the first workspace",
+        "passed": true
+      },
+      {
+        "check": "no telephone, browser voice or schedule created",
+        "passed": true
+      },
+      {
+        "check": "every scored coaching dimension quotes an actual associate excerpt",
+        "passed": true,
+        "scores": [
+          {
+            "name": "discovery",
+            "score": null,
+            "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+          },
+          {
+            "name": "empathy",
+            "score": null,
+            "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+          },
+          {
+            "name": "accuracy",
+            "score": null,
+            "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+          },
+          {
+            "name": "next_step",
+            "score": null,
+            "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+          }
+        ]
+      },
+      {
+        "check": "coach role never proposes sales tasks",
+        "passed": true
+      }
+    ],
+    "agents": [
+      {
+        "role": "coach",
+        "mode": "feedback",
+        "request": "Review only my actual associate practice turns. Score demonstrated skills, quote my own words as evidence and give one better next line. Do not invent store terms.",
+        "requestId": "89513ddb-9282-4e92-8f8c-b789c49d4b39",
+        "status": 200,
+        "response": {
+          "id": "89513ddb-9282-4e92-8f8c-b789c49d4b39",
+          "answer": "Could you please share what features are most important to you in a mattress to help us find the best fit within your budget?",
+          "tasks": [],
+          "feedbackTextSource": "model_suggested_line",
+          "scores": [
+            {
+              "name": "discovery",
+              "score": null,
+              "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+            },
+            {
+              "name": "empathy",
+              "score": null,
+              "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+            },
+            {
+              "name": "accuracy",
+              "score": null,
+              "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+            },
+            {
+              "name": "next_step",
+              "score": null,
+              "evidence": "No matching associate excerpt was returned; this dimension is unscored."
+            }
+          ],
+          "betterLine": "Could you please share what features are most important to you in a mattress to help us find the best fit within your budget?",
+          "createdAt": "2026-11-08T14:27:42.975Z",
+          "role": "coach"
+        }
+      },
+      {
+        "role": "asm",
+        "mode": "assistant",
+        "request": "Build a practical priority plan with up to three task proposals. Prioritise callback requests, distinguish requested from provider-scheduled, and do not assume stock or store availability.",
+        "requestId": "11be782a-d923-41b1-9aee-f5421078f901",
+        "status": 200,
+        "response": {
+          "id": "11be782a-d923-41b1-9aee-f5421078f901",
+          "answer": "Prioritize the callback requested by Mukunda R. for 2026-11-09 at 10:00 AM in Hindi regarding price and family decision. Next, arrange to contact Sanjay P. for his ergonomic chair discussion and callback after work. Third, follow up with Ritu S. on her Luxe mattress quote and delivery inquiries. No assumptions on stock or store availability. These will be call centre tasks for callbacks and support from the store for order details.",
+          "tasks": [],
+          "createdAt": "2026-11-08T14:27:49.921Z",
+          "role": "asm"
+        }
+      }
+    ],
+    "method": "Continued the same isolated QA browser session and its two saved text-practice turns after deploying the feedback field-shape fix.",
+    "noTelephoneOrVoiceCallMade": true,
+    "noCallbackScheduled": true,
+    "completed": false
+  },
+  "workersAcceptance": {
+    "checkedAt": "2026-11-08T14:40:32.906Z",
+    "deploymentCommit": "9d07eb9",
+    "provider": "Cloudflare Workers AI",
+    "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "checks": [
+      {
+        "check": "all four role requests use the dedicated intelligence provider",
+        "passed": true
+      },
+      {
+        "check": "feedback is specific prose with a suggested next line",
+        "passed": true,
+        "feedbackTextSource": "model",
+        "scoreCount": 4
+      },
+      {
+        "check": "ASM tasks are proposed before creation",
+        "passed": true,
+        "proposalCount": 3
+      },
+      {
+        "check": "ASM approval creates the proposed tasks after large agent history",
+        "passed": true,
+        "status": 200,
+        "savedTaskCount": 3
+      },
+      {
+        "check": "repeated approval does not duplicate tasks",
+        "passed": true,
+        "status": 200,
+        "savedTaskCount": 3
+      },
+      {
+        "check": "a saved task can be completed and survives reload",
+        "passed": true,
+        "status": 200,
+        "savedStatus": "done"
+      },
+      {
+        "check": "roleplay, feedback and all agent histories persist",
+        "passed": true,
+        "coachingReviews": 2,
+        "associateTurns": 3,
+        "conversationRoles": ["avani", "coach", "asm"],
+        "taskCount": 3
+      },
+      {
+        "check": "second browser remains isolated",
+        "passed": true
+      },
+      {
+        "check": "no telephone, browser voice or schedule created",
+        "passed": true
+      },
+      {
+        "check": "feedback includes at least one supported score and every scored excerpt matches",
+        "passed": true,
+        "scores": [
+          {
+            "name": "discovery",
+            "score": 4,
+            "evidence": "What matters most to you in a mattress, and what budget would feel comfortable?"
+          },
+          {
+            "name": "empathy",
+            "score": 4,
+            "evidence": "I understand the price feels high"
+          },
+          {
+            "name": "accuracy",
+            "score": 3,
+            "evidence": "I can ask the store team to confirm options within your budget, but I cannot promise a discount or EMI terms"
+          },
+          {
+            "name": "next_step",
+            "score": 4,
+            "evidence": "Would you like a staff callback tomorrow at ten in Hindi?"
+          }
+        ]
+      },
+      {
+        "check": "coach never proposes sales tasks",
+        "passed": true
+      }
+    ],
+    "agents": [
+      {
+        "role": "avani",
+        "mode": "assistant",
+        "request": "What does Mukunda need next? Is this callback only requested or scheduled with the calling provider, and what stock availability do we know?",
+        "requestId": "b82839b2-4800-4d34-a75d-20606f074d96",
+        "status": 200,
+        "response": {
+          "id": "b82839b2-4800-4d34-a75d-20606f074d96",
+          "answer": "Mukunda needs a follow-up callback to discuss mattress price and family decision. This callback is only saved as requested, not scheduled with a calling provider. We currently do not know any confirmed stock availability regarding Mukunda's mattress inquiry.",
+          "tasks": [],
+          "intelligenceProvider": "workers-ai",
+          "createdAt": "2026-11-08T14:40:37.687Z",
+          "role": "avani"
+        }
+      },
+      {
+        "role": "coach",
+        "mode": "roleplay",
+        "request": "Thank you. To help the store team check useful options, is comfort or price your bigger concern?",
+        "requestId": "8646a820-938a-4b3c-aedf-375e3526807c",
+        "status": 200,
+        "response": {
+          "id": "8646a820-938a-4b3c-aedf-375e3526807c",
+          "answer": "Mujhe comfort aur price dono hi zaroori hain, lekin agar price thodi zyada hai to shayad main apne parivaar se baat karke sochunga.",
+          "tasks": [],
+          "intelligenceProvider": "workers-ai",
+          "createdAt": "2026-11-08T14:40:42.419Z",
+          "role": "coach"
+        }
+      },
+      {
+        "role": "coach",
+        "mode": "feedback",
+        "request": "Review only my actual associate practice turns. Give specific feedback with one concrete improvement, scores supported by exact quotes from my own words, and one better next line.",
+        "requestId": "2ab407fa-daa6-4e4a-b690-cae682462830",
+        "status": 200,
+        "response": {
+          "id": "2ab407fa-daa6-4e4a-b690-cae682462830",
+          "answer": "The associate's responses show a strength in attempting to understand the customer's concerns and budget. However, an improvement could be to avoid making statements that may be perceived as promises, such as 'I can ask the store team to confirm options within your budget'. A more accurate approach would be to focus on the next steps and what the customer can expect. The associate also shows empathy by acknowledging the customer's concerns about price and comfort. One concrete improvement is to rephrase the request for a staff callback to focus on the customer's preferred timing and language.",
+          "tasks": [],
+          "intelligenceProvider": "workers-ai",
+          "scores": [
+            {
+              "name": "discovery",
+              "score": 4,
+              "evidence": "What matters most to you in a mattress, and what budget would feel comfortable?"
+            },
+            {
+              "name": "empathy",
+              "score": 4,
+              "evidence": "I understand the price feels high"
+            },
+            {
+              "name": "accuracy",
+              "score": 3,
+              "evidence": "I can ask the store team to confirm options within your budget, but I cannot promise a discount or EMI terms"
+            },
+            {
+              "name": "next_step",
+              "score": 4,
+              "evidence": "Would you like a staff callback tomorrow at ten in Hindi?"
+            }
+          ],
+          "betterLine": "May I request a callback for you at your preferred time of kal subah 10 baje, and I will make sure the store team is aware of your budget and priorities?",
+          "feedbackTextSource": "model",
+          "createdAt": "2026-11-08T14:40:58.584Z",
+          "role": "coach"
+        }
+      },
+      {
+        "role": "asm",
+        "mode": "assistant",
+        "request": "Build my priority plan with three proposed tasks for the call centre or store team. Identify the customer, action, owner and why it matters. Propose only; I will approve them.",
+        "requestId": "c6a1e65c-6b33-497c-b072-b7fb4e66953a",
+        "status": 200,
+        "error": "Client network failure; no model retry made.",
+        "networkRecovery": "Fresh read confirmed no saved operation; private durable budget ledger confirmed this exact request had never been reserved. Resubmitted the same request ID, which cannot reserve twice.",
+        "response": {
+          "id": "c6a1e65c-6b33-497c-b072-b7fb4e66953a",
+          "answer": "The priority plan focuses on callback requests and customer inquiries. First, prioritize Mukunda R.'s callback request for 2026-11-09 at 10:00 AM in Hindi to discuss price and family decision. Next, contact Sanjay P. for his ergonomic chair discussion and callback after work. Lastly, follow up with Ritu S. on her Luxe mattress quote and delivery inquiries.",
+          "tasks": [
+            {
+              "leadId": "mukunda",
+              "title": "Discuss price and family decision",
+              "reason": "Customer has requested a callback for 2026-11-09 at 10:00 AM in Hindi",
+              "owner": "Call centre"
+            },
+            {
+              "leadId": "sanjay",
+              "title": "Discuss ergonomic chair options",
+              "reason": "Customer has requested a callback after work to discuss chair options",
+              "owner": "Call centre"
+            },
+            {
+              "leadId": "ritu",
+              "title": "Follow up on Luxe mattress quote and delivery",
+              "reason": "Customer has asked for a written quote and delivery details after trying the Luxe mattress",
+              "owner": "Store team"
+            }
+          ],
+          "intelligenceProvider": "workers-ai",
+          "createdAt": "2026-11-08T14:42:39.882Z",
+          "role": "asm"
+        }
+      }
+    ],
+    "method": "Actual production HTTP requests in one isolated QA browser session, continued through roleplay, feedback, task approval and reload. Input text is QA-authored. No voice, phone or scheduler endpoint is invoked.",
+    "noTelephoneOrVoiceCallMade": true,
+    "noCallbackScheduled": true,
+    "before": {
+      "tasks": 0,
+      "coachingReviews": 1,
+      "associateTurns": 2
+    },
+    "completed": true
   }
 }

@@ -102,6 +102,7 @@ function PhoneFields({
         Your test mobile number
         <input
           aria-label="Your test mobile number"
+          className="og-private-phone"
           type="tel"
           autoComplete="tel"
           placeholder="+91 98765 43210"

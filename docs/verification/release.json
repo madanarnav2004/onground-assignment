@@ -1,14 +1,15 @@
 {
-  "verifiedAt": "2026-11-08T14:24:17.676Z",
+  "verifiedAt": "2026-11-08T14:45:05.815Z",
   "productionUrl": "https://onground-arnav.vercel.app",
   "repository": "https://github.com/madanarnav2004/onground-assignment",
-  "deploymentId": "dpl_2BjojrpBknoXLbCLF7LzeMsa44y2",
+  "deploymentId": "dpl_MNQ6UkwfeMnSyixPrYHET5uWwBR8",
   "state": "READY",
   "region": "bom1",
-  "commit": "23758912998892c3df8db27220dc35f4496c82fb",
+  "commit": "9d07eb964c96d77a793a35dd56bf2102b0559a12",
   "publicRepository": true,
   "defaultBranch": "codex/onground-calling",
-  "testsPassed": 30,
+  "testsPassed": 36,
   "nativeRecording": "blocked: Mac locked",
-  "humanAudio": "not yet independently verified"
+  "humanAudio": "Not yet independently verified; deferred until user returns",
+  "intelligence": "Hosted Workers AI roleplay, feedback, Avani and ASM approval/completion passed"
 }

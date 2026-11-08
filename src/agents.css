@@ -820,3 +820,7 @@
     gap: 7px;
   }
 }
+/* Explicit display rules must not reveal controls hidden by call state. */
+.ag-panel [hidden] {
+  display: none !important;
+}

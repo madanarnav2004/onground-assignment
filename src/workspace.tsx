@@ -1670,6 +1670,7 @@ export function Workspace() {
                   Your demo phone
                   <input
                     aria-label="Your demo phone"
+                    className="og-private-phone"
                     type="tel"
                     placeholder="+91 mobile number"
                     value={demoPhone}

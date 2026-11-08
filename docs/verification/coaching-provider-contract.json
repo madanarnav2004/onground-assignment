@@ -25,5 +25,6 @@
       "evidence": "Would you like a staff callback tomorrow at ten in Hindi?"
     }
   ],
-  "betterLine": "I will check with our store team for options within your budget and follow up with you. Would you prefer a callback in Hindi tomorrow at 10 AM?"
+  "betterLine": "I will check with our store team for options within your budget and follow up with you. Would you prefer a callback in Hindi tomorrow at 10 AM?",
+  "releaseRole": "Historical diagnostic for the optional legacy Bolna analysis path; production text intelligence now uses Workers AI."
 }
