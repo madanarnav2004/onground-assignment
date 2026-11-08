@@ -8,3 +8,6 @@ data/
 .DS_Store
 .vercel
 .env*.local
+inference/.wrangler/
+.dev.vars
+.dev.vars.*

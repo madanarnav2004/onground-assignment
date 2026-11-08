@@ -176,6 +176,7 @@ export function Workspace() {
     [responses, setResponses] = useRemote("responses"),
     [followups, setFollowups] = useRemote("followups");
   const remote = useWorkspace();
+  const [agentLeadId, setAgentLeadId] = useState("mukunda");
   const [agentOpen, setAgentOpen] = useState<AgentRole | null>(null),
     [demoPhone, setDemoPhone] = useState(""),
     [demoConsent, setDemoConsent] = useState(false);
@@ -1067,7 +1068,10 @@ export function Workspace() {
                           </span>
                           <button
                             className="og-secondary"
-                            onClick={() => openCallback(l)}
+                            onClick={() => {
+                              setAgentLeadId(l.id);
+                              setAgentOpen("telecaller");
+                            }}
                           >
                             <Phone size={12} />
                             Call back
@@ -1615,6 +1619,7 @@ export function Workspace() {
           >
             <AgentPanel
               role={agentOpen}
+              initialLeadId={agentLeadId}
               onRecovery={() => {
                 setAgentOpen(null);
                 setCallOpen(true);

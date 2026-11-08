@@ -23,7 +23,11 @@ import {
 } from "./workspaceState";
 import "./agents.css";
 export type AgentRole = "coach" | "asm" | "avani" | "followup" | "telecaller";
-type Props = { role: AgentRole; onRecovery?: () => void };
+type Props = {
+  role: AgentRole;
+  onRecovery?: () => void;
+  initialLeadId?: string;
+};
 const titles: Record<
   AgentRole,
   { name: string; eyebrow: string; intro: string }
@@ -1001,11 +1005,11 @@ type HumanRecord = {
   notes?: string;
   agentReportedStatus?: string;
 };
-function Telecaller() {
+function Telecaller({ initialLeadId = "mukunda" }: { initialLeadId?: string }) {
   const { reload, ready } = useWorkspace();
   const [phone, setPhone] = useState(""),
     [consent, setConsent] = useState(false),
-    [leadId, setLeadId] = useState("mukunda"),
+    [leadId, setLeadId] = useState(initialLeadId),
     [status, setStatus] = useState("idle"),
     [error, setError] = useState(""),
     [muted, setMuted] = useState(false),
@@ -1449,7 +1453,7 @@ function Telecaller() {
     </>
   );
 }
-export default function AgentPanel({ role, onRecovery }: Props) {
+export default function AgentPanel({ role, onRecovery, initialLeadId }: Props) {
   const meta = titles[role];
   const { error, ready } = useWorkspace();
   return (
@@ -1472,7 +1476,7 @@ export default function AgentPanel({ role, onRecovery }: Props) {
       ) : role === "followup" ? (
         <Followups onRecovery={onRecovery} />
       ) : (
-        <Telecaller />
+        <Telecaller initialLeadId={initialLeadId} />
       )}
       {["asm", "avani", "coach"].includes(role) && (
         <p className="ag-model-note">

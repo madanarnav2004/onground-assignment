@@ -1,0 +1,141 @@
+{
+  "checkedAt": "2026-11-08T14:34:25.252Z",
+  "provider": "Cloudflare Workers AI",
+  "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  "method": "Actual protected inference over the same QA-authored practice/workspace; no phone or browser voice call",
+  "results": [
+    {
+      "role": "asm",
+      "mode": "assistant",
+      "durationMs": 9247,
+      "input": "Build my priority plan with three proposed tasks for the call centre or store team. Identify the customer, action, owner and why it matters. Propose only; I will approve them.",
+      "output": {
+        "answer": "Based on the provided data, the priority plan includes three proposed tasks. The first task is to handle the callback request from Mukunda R. regarding price and family decision. The second task is to contact Sanjay P. for his ergonomic chair discussion and callback after work. The third task is to follow up with Ritu S. on her Luxe mattress quote and delivery inquiries.",
+        "tasks": [
+          {
+            "leadId": "mukunda",
+            "title": "Handle callback request regarding price and family decision",
+            "reason": "Customer has requested a callback to discuss price and family decision, and it is scheduled for 2026-11-09 at 10:00 AM in Hindi.",
+            "owner": "Call centre"
+          },
+          {
+            "leadId": "sanjay",
+            "title": "Contact for ergonomic chair discussion and callback after work",
+            "reason": "Customer has requested a callback after work to discuss the chair options and compare two chair options.",
+            "owner": "Call centre"
+          },
+          {
+            "leadId": "ritu",
+            "title": "Follow up on Luxe mattress quote and delivery inquiries",
+            "reason": "Customer has asked for a quote after trying the Luxe mattress and wants delivery details, including whether delivery is available to her pincode.",
+            "owner": "Store team"
+          }
+        ],
+        "intelligenceProvider": "workers-ai"
+      }
+    },
+    {
+      "role": "coach",
+      "mode": "feedback",
+      "durationMs": 4838,
+      "input": "Review only my actual associate practice turns. Give scores with exact quotes from my own words and one better next line.",
+      "output": {
+        "answer": "Practical feedback on the associate, including one improvement",
+        "tasks": [],
+        "intelligenceProvider": "workers-ai",
+        "scores": [
+          {
+            "name": "discovery",
+            "score": 5,
+            "evidence": "What matters most to you in a mattress, and what budget would feel comfortable?"
+          },
+          {
+            "name": "empathy",
+            "score": 4,
+            "evidence": "I understand the price feels high"
+          },
+          {
+            "name": "accuracy",
+            "score": 5,
+            "evidence": "I cannot promise a discount or EMI terms"
+          },
+          {
+            "name": "next_step",
+            "score": 5,
+            "evidence": "Would you like a staff callback tomorrow at ten in Hindi?"
+          }
+        ],
+        "betterLine": "Can I also take your contact number to ensure the store team can reach you tomorrow at 10 am?",
+        "feedbackTextSource": "model"
+      }
+    }
+  ],
+  "finalRetest": {
+    "checkedAt": "2026-11-08T14:35:53.677Z",
+    "results": [
+      {
+        "role": "coach",
+        "mode": "feedback",
+        "durationMs": 8991,
+        "output": {
+          "answer": "The associate effectively acknowledged the customer's concern about the price and inquired about their budget and priorities with the line 'I understand the price feels high. What matters most to you in a mattress, and what budget would feel comfortable?' A concrete improvement could be to rephrase the line 'I can ask the store team to confirm options within your budget, but I cannot promise a discount or EMI terms' to focus more on the customer's needs and the store's capabilities.",
+          "tasks": [],
+          "intelligenceProvider": "workers-ai",
+          "scores": [
+            {
+              "name": "discovery",
+              "score": 4,
+              "evidence": "I understand the price feels high. What matters most to you in a mattress, and what budget would feel comfortable?"
+            },
+            {
+              "name": "empathy",
+              "score": 4,
+              "evidence": "I understand the price feels high"
+            },
+            {
+              "name": "accuracy",
+              "score": 5,
+              "evidence": "I can ask the store team to confirm options within your budget, but I cannot promise a discount or EMI terms"
+            },
+            {
+              "name": "next_step",
+              "score": 5,
+              "evidence": "Would you like a staff callback tomorrow at ten in Hindi?"
+            }
+          ],
+          "betterLine": "May I request a callback for you to discuss your options with our store team, and we will do our best to assist you within your budget of Rs 10000?",
+          "feedbackTextSource": "model"
+        }
+      },
+      {
+        "role": "asm",
+        "mode": "assistant",
+        "durationMs": 9523,
+        "output": {
+          "answer": "The priority plan focuses on callback requests and customer inquiries. The proposed tasks address customer needs and provide support for order details.",
+          "tasks": [
+            {
+              "leadId": "mukunda",
+              "title": "Discuss price and family decision",
+              "reason": "Mukunda R. requested a callback for 2026-11-09 at 10:00 AM in Hindi to discuss price and family decision regarding the Ortho mattress.",
+              "owner": "Call centre"
+            },
+            {
+              "leadId": "sanjay",
+              "title": "Discuss ergonomic chair options",
+              "reason": "Sanjay P. requested a callback after work to discuss the ergonomic chair options and compare features.",
+              "owner": "Call centre"
+            },
+            {
+              "leadId": "ritu",
+              "title": "Provide Luxe mattress quote and delivery details",
+              "reason": "Ritu S. asked for a quote and delivery details after trying the Luxe mattress, requiring follow-up support from the store team.",
+              "owner": "Store team"
+            }
+          ],
+          "intelligenceProvider": "workers-ai"
+        }
+      }
+    ]
+  }
+}
