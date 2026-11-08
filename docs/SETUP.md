@@ -1,70 +1,83 @@
-# Setup and calling architecture
+# Running the project
 
-## Run locally
-
-Use **Node 22 or later** and npm. Node 25 was used during development.
+Use Node **22.12 or newer** and npm. I developed it with Node 25.
 
 ```sh
 npm ci
 cp .env.example .env.local
-# Fill the required private settings in .env.local.
+```
+
+Fill in `.env.local` before starting. `APP_SESSION_SECRET` needs a random secret; keep it stable so existing browser workspaces keep working. Leave `CALLING_ENABLED=false` until the calling accounts are ready.
+
+```sh
 npm run dev
 ```
 
-Open `http://127.0.0.1:4317`. The development server binds to loopback. Do not expose the Vite development server publicly.
+Open [localhost:4317](http://127.0.0.1:4317). The dev server runs on this machine only. Without a Blob token, it saves workspace data in local JSON files under `data/`.
 
 ```sh
 npm test
 npm run build
 ```
 
-The example file contains no credentials. Keep `.env.local`, `.private/`, `data/` and `.vercel/` out of Git. Provider configurations and prompts are under `config/`. The relevant agents and extraction/disposition fields must also be configured in the Bolna account; source configuration files alone do not provision a provider account.
+## Settings
 
-| Private setting                      | Purpose                                                                                                                                                   |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `APP_SESSION_SECRET`                 | Random, high-entropy secret used to sign workspace cookies.                                                                                               |
-| `INFERENCE_URL` / `INFERENCE_SECRET` | Dedicated intelligence endpoint and server-only bearer secret; see [inference/README.md](../inference/README.md).                                         |
-| `APP_URL`                            | Application origin. Use the production HTTPS alias for deployed provider callbacks. Local requests to the documented loopback origins are also supported. |
-| `BOLNA_API_KEY`                      | Server-only Bolna API access.                                                                                                                             |
-| `BOLNA_AGENT_ID`                     | Walk-out recovery agent, including its Retail Handoff extraction fields.                                                                                  |
-| `BOLNA_COACH_AGENT_ID`               | Voice practice agent that plays the shopper.                                                                                                              |
-| `BOLNA_FOLLOWUP_AGENT_ID`            | Context-aware callback agent.                                                                                                                             |
-| `BOLNA_ANALYST_AGENT_ID`             | Optional legacy analysis compatibility path; not used by hosted text roles when `INFERENCE_URL` is configured.                                            |
-| `VOBIZ_AUTH_ID`, `VOBIZ_AUTH_TOKEN`  | Server-side carrier authentication; the master token is never sent to the browser.                                                                        |
-| `VOBIZ_APP_ID`, `VOBIZ_CALLER_ID`    | Dedicated voice application and existing voice-enabled caller number.                                                                                     |
-| `VOBIZ_WEBHOOK_SECRET`               | Random, high-entropy secret protecting the voice callback routes.                                                                                         |
-| `BLOB_READ_WRITE_TOKEN`              | Private Vercel Blob storage. Omit for durable local JSON storage during local development.                                                                |
-| `CALLING_ENABLED`                    | Must be `true` to enable demo calling. Keep `false` while configuring an account.                                                                         |
-| `PORT`                               | Local development port; defaults to `4317`.                                                                                                               |
+These values stay on the server. The example file explains where each one is used.
 
-`BOLNA_FROM_NUMBER`, `TEST_PHONE_NUMBER` and `MAX_TEST_CALLS` are retained only for the earlier fixed-recipient calling-service test harness. The current workspace asks the participant for their own number; the shared hosted allowance is enforced in `server/api.mjs`.
+| Setting                             | What to put here                                                                              |
+| ----------------------------------- | --------------------------------------------------------------------------------------------- |
+| `APP_SESSION_SECRET`                | A random secret for signing workspace cookies.                                                |
+| `APP_URL`                           | `http://127.0.0.1:4317` locally; the public HTTPS app URL when deployed.                      |
+| `INFERENCE_URL`, `INFERENCE_SECRET` | The Workers AI endpoint and its bearer secret. See [inference setup](../inference/README.md). |
+| `BOLNA_API_KEY`                     | Your Bolna API key.                                                                           |
+| `BOLNA_AGENT_ID`                    | The walk-out recovery agent ID.                                                               |
+| `BOLNA_COACH_AGENT_ID`              | The practice agent ID; this agent plays the shopper.                                          |
+| `BOLNA_FOLLOWUP_AGENT_ID`           | The follow-up agent ID.                                                                       |
+| `VOBIZ_AUTH_ID`, `VOBIZ_AUTH_TOKEN` | Your Vobiz account credentials.                                                               |
+| `VOBIZ_APP_ID`, `VOBIZ_CALLER_ID`   | The voice application and an existing voice-enabled number.                                   |
+| `VOBIZ_WEBHOOK_SECRET`              | A random secret for the carrier callback routes.                                              |
+| `BLOB_READ_WRITE_TOKEN`             | A **private** Vercel Blob store token, required for hosted persistence. Optional locally.     |
+| `CALLING_ENABLED`                   | Set to `true` once the provider setup is complete.                                            |
+| `PORT`                              | Optional; defaults to `4317`.                                                                 |
 
-## How real calling works
+`BOLNA_ANALYST_AGENT_ID` supports the earlier analysis implementation when `INFERENCE_URL` is absent. The hosted text agents use Workers AI. `BOLNA_FROM_NUMBER`, `TEST_PHONE_NUMBER` and `MAX_TEST_CALLS` belong to the earlier fixed-number test harness; the workspace uses its own calling form and server-side allowances.
 
-**AI telephone calling.** The browser sends a consented request to the app server. The server reserves the operation durably, writes a call record before contacting Bolna, and sends `POST /call`. The verified shared/default carrier route does not require buying a new number. The tested recovery agent uses GPT-4.1-mini, Deepgram Nova-3 and the Tripti ElevenLabs voice, with a provider-configured 90-second maximum and automatic rescheduling disabled.
+## Connect the providers
 
-The app reads `GET /executions/{execution_id}` through its server. Queued, ringing, in-progress, disconnected/processing and completed are different states. Final transcript, summary and cost appear only when the provider returns them. A lost response or unknown acceptance blocks blind redial; the app never manufactures a successful call.
+The prompts and extraction questions live in `config/`. Run the Bolna setup script to create or reuse the corresponding account-side agents:
 
-**Human calling.** The server mints a short-lived Vobiz JWT with an individual workspace identity and a dedicated application. The browser SDK registers and places the call. The protected answer route consumes a single-use dial grant and returns XML for the consented destination. Provider callbacks update the saved status; browser “ended” events cannot fabricate provider completion. Human notes and dispositions remain explicitly operator-reported.
+```sh
+node --env-file=.env.local scripts/provision-agents.mjs
+```
 
-**Scheduled follow-up.** A callback request is initially just a request. The user must supply their own test phone and approve execution. Scheduling sends an explicit `scheduled_at` value to Bolna, within seven days and between 9 am and 8 pm IST. The provider owns execution after that point; no open browser or local timer is required. No automatic retries are configured, and a scheduled call is distinct from a store booking.
+It saves each agent ID in `.env.local` and adds any missing extraction fields. It doesn't place calls or replace existing prompts.
 
-**Trial limits.** A first-time visitor can explore without entering a number. A telephone action asks for their own Indian mobile number and consent. Trial accounts may require that recipient to be verified by the provider; entering a number does not bypass that restriction. The shared assignment allowance is **5 telephone operations, 5 web voice sessions, 3 human-call operations and 70 analysis operations**, with a per-session call cooldown. Reservations persist across server instances. These count limits are not a guaranteed currency ceiling; actual provider spend is reviewed against the owner’s ₹200 test budget. No paid upgrade or new number rental is assumed.
+For Vobiz, deploy the app first and set `APP_URL` to its HTTPS address. Then run:
 
-Official interfaces: [Bolna calling](https://www.bolna.ai/docs/api-reference/calls/make), [Bolna browser voice SDK](https://github.com/bolna-ai/web-call), [Vobiz browser calling reference](https://github.com/vobiz-ai/Vobiz-RTC-demo).
+```sh
+node --env-file=.env.local scripts/provision-vobiz.mjs
+```
 
-## Intelligence and persistence
+This uses an existing caller number and creates the voice application. It doesn't buy a number. Test human calling through the hosted app: Vobiz must be able to reach the answer and status URLs, which it cannot do on localhost.
 
-ASM, AvaniBot and text coaching use a dedicated authenticated **Cloudflare Workers AI service with Llama 3.3 JSON mode**. The app supplies only relevant workspace context, validates canonical lead IDs and task owners, and checks coaching quotations against actual associate turns. Tasks require approval before they are saved. Voice conversations and telephone calls use Bolna. Setup and limits are documented in [inference/README.md](../inference/README.md). The earlier Bolna analysis route remains an optional compatibility path when the dedicated service is not configured. A configured-service error is shown explicitly; it does not silently switch providers or invent a response. The server bounds context to the bridge’s 32 KiB request limit, while retaining the original workspace and supporting evidence.
+The text agents need the separate [Workers AI service](../inference/README.md). Deploy the repository root to Vercel using `vercel.json`, add the server settings above, and connect a private Blob store. Redeploy after changing environment variables. Keep `.env.local`, `.private/`, `data/` and `.vercel/` out of Git.
 
-The hosted app uses **private Vercel Blob**. Signed, HttpOnly cookies identify separate anonymous browser workspaces; they are not employee accounts or an enterprise authentication system. Conditional writes protect reservations and workspace updates against competing serverless instances. Locally, serialized atomic JSON writes provide persistence without a cloud token. Messages, pinned responses, callbacks, conversations, coaching reviews, tasks and call records are saved server-side.
+## The calling paths
 
-The app does not connect to a live CRM, store inventory, staff calendar or WhatsApp service. Channel messages are internal demo records. Requested visits and callback times never become confirmed availability by implication. The sample intent scores are fixtures, not a trained scoring system. No conversion or revenue improvement is claimed.
+**AI calls:** the app saves a call request and reserves an allowance before sending Bolna `POST /call`. It polls `GET /executions/{execution_id}` for progress and the final transcript, summary and cost. An uncertain provider response stays unresolved until checked. The tested recovery agent uses GPT-4.1-mini, Deepgram Nova-3 and the Tripti ElevenLabs voice, with a 90-second provider limit and automatic rescheduling off. The demo used Bolna's shared/default number.
 
-## Provider setup scripts
+**Human calls:** Vobiz issues a short-lived JWT for that browser workspace. Its SDK connects the browser to the phone network; the answer route permits one dial to the approved destination. Carrier callbacks supply the final call status. Notes and outcomes are entered by the person making the call.
 
-- `node --env-file=.env.local scripts/provision-agents.mjs` creates or reuses the dedicated Bolna agents and extraction fields, saving their IDs privately after each creation. It does not place calls.
-- `node --env-file=.env.local scripts/provision-vobiz.mjs` configures the dedicated voice application with your deployed callback origin and existing caller ID. It does not purchase a number.
-- The protected reasoning service is documented in [inference/README.md](../inference/README.md).
+**Follow-up:** saving a callback request doesn't dial anyone. After the user approves a number and time, the server sends `scheduled_at` to Bolna. Bolna then runs the call even if the browser is closed. The demo accepts times within seven days, between 9 am and 8 pm IST, with automatic retries off. Store availability still needs staff confirmation.
 
-Review the configuration before provisioning resources in your own accounts. Keep the master credentials on the server.
+The calling form asks for the participant's own Indian mobile number and consent. Trial accounts may require recipient verification. The shared demo allowances are 5 telephone operations, 5 browser voice sessions, 3 human-call operations and 70 analysis requests, with a call cooldown per workspace. These allowances limit operations rather than spend. The recorded tests used existing trial credit and numbers within the owner's ₹200 budget; no upgrade or number rental was purchased.
+
+Provider references: [Bolna calling API](https://www.bolna.ai/docs/api-reference/calls/make), [Bolna browser voice SDK](https://github.com/bolna-ai/web-call), [Vobiz browser calling example](https://github.com/vobiz-ai/Vobiz-RTC-demo).
+
+## Data and text agents
+
+ASM, AvaniBot and text coaching use Llama 3.3 JSON mode through the authenticated Workers AI service. The app sends the relevant workspace context, checks proposed lead IDs and task owners, and compares coaching evidence with the associate's actual words. Suggested tasks are saved after approval. Context is trimmed to the service's 32 KiB limit; original workspace records remain available. A configured inference service error is shown to the user.
+
+Private Blob storage keeps calls, callbacks, messages, pinned replies, conversations, coaching and tasks across refreshes. Signed HttpOnly cookies give each browser a separate anonymous workspace. Conditional writes prevent competing server requests from overwriting each other's changes.
+
+This is a retail demo with sample leads and intent scores. CRM, inventory, WhatsApp and the staff calendar are not connected. A requested callback or visit therefore remains a request until the store confirms it.

@@ -1,89 +1,65 @@
 # On-Ground Call Centre
 
-**An Indian retail call-centre workbench, built for the On-Ground engineering assignment.**
+Arnav Madan's submission for the On-Ground engineering assignment.
 
-Arnav Madan · React + TypeScript
+[Live app](https://onground-arnav.vercel.app) · [1:50 demo](https://onground-arnav.vercel.app/submission.mp4) · [Try the demo](docs/REVIEWER_GUIDE.md)
 
-[Try the app](https://onground-arnav.vercel.app) · [Watch the 1:50 demo](https://onground-arnav.vercel.app/submission.mp4) · [Reviewer guide](docs/REVIEWER_GUIDE.md)
+I built this around a shopper who tried a mattress, liked it, and left undecided over price. The associate's job is to understand the hesitation and agree on a next step.
 
-## The product decision
+My main product direction was to cut the work after the call. If the customer has already given a time, language and budget, the associate shouldn't have to enter them again. The app prepares the callback request for review. The dashboard puts that work first; the required KPIs and charts are one expansion away.
 
-I chose walk-out recovery: a shopper liked a mattress, but left because of price and wanted to discuss it with family. That gives the call a useful job—understand the hesitation and agree on a next step.
-
-My main design direction was to let AI remove repeated work. The default dashboard puts the next action first. Performance, earnings and trends are still there, behind an expansion. After a call, the requested time, language, budget and unresolved question are prepared for review, so the associate has less to re-enter.
-
-One detail mattered in the test: a **₹10,000 budget** is the shopper’s budget, not a product quote. A **Hindi callback at 10 am tomorrow** is a request, not confirmed store availability. I kept that distinction in the interface and the calling prompts.
-
-## Take a quick tour
-
-1. **Dashboard → Review allocated leads.** Check Mukunda’s scores and buying signals, then page through the leads.
-2. **Calls to make → Incoming → Recent.** Expand and page the queue, open a human callback, or review the clearly labelled real-call test.
-3. **Save a callback request → Calendar.** The saved time and language appear in the agenda. Month navigation and Today work independently of the sample events.
-4. **Pulse.** Answer a pinned handoff, send a channel message, or try a role agent. AvaniBot can answer questions about this workspace.
-
-The supplied green/purple visual language and screen structure remain. I reduced what is visible by default, while keeping the required information available. [Design notes](docs/DESIGN_REVIEW.md) explain the tradeoffs.
+[Why I built it this way](docs/EXPLAIN.md) goes into the decisions and what changed during testing. [Research notes](docs/PRODUCT.md) cover the Indian retail context.
 
 ## What works
 
-| Workflow          | Verified result                                                                                                                                                     |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Walk-out recovery | A real Hindi telephone call completed in **88 seconds**; the customer’s budget and callback request were captured.                                                  |
-| Pitch Coach       | Text practice and a **31.9-second browser voice session**, followed by feedback grounded in the actual associate’s words. An unsupported dimension stayed unscored. |
-| ASM Agent         | Three proposed tasks were approved and saved. Repeating approval did not duplicate them; task completion survived reload.                                           |
-| Human Tele-caller | Browser-to-phone call completed. I checked audio in both directions; the provider recorded **27 seconds** of conversation.                                          |
-| Follow-up         | Native provider scheduling/cancellation and a real **90-second AI callback** completed. Busy attempts remain in history; retry is an explicit reviewed action.      |
-| AvaniBot          | Live workspace questions, persisted conversations and reviewed task proposals.                                                                                      |
+The required Dashboard, Calls, Incoming, Recent, Calendar, Pulse/channel and lead modal are built. All five bonuses are included: channel messages, pinned replies, practice/callback screens, phone-width layouts and library charts. The [PDF checklist](docs/DELIVERABLE_AUDIT.md) maps the details.
 
-All required screens are implemented. The five bonuses are included: channel messages, pinned replies, Practise a call/Call back screens, phone-width layouts and Recharts charts. The [PDF checklist](docs/DELIVERABLE_AUDIT.md) maps each requirement to its implementation and evidence.
+| Workflow      | What was tested                                                                                                  |
+| ------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Recovery      | An 88-second Hindi telephone call; budget and requested callback captured.                                       |
+| Pitch Coach   | Text practice and a 31.9-second browser voice session, with feedback based on the associate's actual responses.  |
+| ASM           | Three suggested tasks approved and saved; repeated approval created no duplicates; completion survived a reload. |
+| Human calling | Browser microphone to a phone, with 27 seconds of conversation. I checked audio in both directions.              |
+| Follow-up     | Provider scheduling and cancellation, followed by a completed 90-second AI callback.                             |
+| AvaniBot      | Workspace questions, saved conversations and task suggestions that can be reviewed before saving.                |
 
-## Stack and why
+The demo video shows the app and labelled playback of the original telephone test. These calls were roleplays with me. Store metrics, leads and scores are sample data.
 
-I used **React, TypeScript and Vite** for the stateful screens and reusable dialogs. A small **Node API on Vercel** keeps calling credentials out of the browser. **Private Vercel Blob** persists each reviewer’s workspace and protects concurrent writes.
+## Run it
 
-**Bolna** handles AI telephone calls and browser voice practice; **Vobiz** provides the human browser-to-phone route. **Cloudflare Workers AI**, behind a server-only authenticated endpoint, handles the workspace reasoning and structured coaching feedback. These services keep the prototype focused on the associate’s workflow.
-
-## Run locally
-
-Use Node 22 or later:
+Use Node 22.12 or later.
 
 ```sh
 npm ci
 cp .env.example .env.local
-# Fill the private settings described in docs/SETUP.md.
+# Add the provider settings listed in docs/SETUP.md.
 npm run dev
 ```
 
-Open `http://127.0.0.1:4317`. For checks:
+Open `http://127.0.0.1:4317`. Run `npm test` for the 37 automated checks, and `npm run build` for TypeScript and the production build. Both pass for the published app.
 
-```sh
-npm test
-npm run build
-```
+The [setup guide](docs/SETUP.md) has the settings and provisioning commands. Credentials belong in `.env.local`, which is ignored by Git.
 
-[Setup and architecture](docs/SETUP.md) covers every setting, provider provisioning and deployment. The example contains no credentials. Keep `.env.local`, `.private/`, `data/` and `.vercel/` out of Git.
+## Stack and calling
 
-## How calling works
+React, TypeScript and Vite handle the screens; Recharts supplies the seven-day charts. A Node API on Vercel keeps provider credentials on the server. Private Vercel Blob stores each reviewer's workspace and handles competing writes.
 
-For an AI phone call, the server saves a durable reservation before sending Bolna’s `POST /call`, then polls the execution record. Ringing, conversation, processing and completed are separate states. Final transcript, summary and cost wait for the provider’s final result.
+Bolna runs the AI calls and browser voice practice. The server reserves a call before sending `POST /call`, then polls the provider for its result. Ringing, conversation and processing have separate states. Transcript, duration and cost appear when the provider finalises them.
 
-For human calls, the server issues a short-lived Vobiz token. A protected answer route consumes a one-use grant for the consented destination; provider callbacks update the result. Notes remain the associate’s own report.
+Vobiz handles human calling. The browser gets a short-lived token, and a one-use server grant limits the call to the destination the user confirmed. Scheduled AI callbacks use Bolna's `scheduled_at`, so they can run after the page closes. A failed or busy call can be reviewed for a manual retry; the app won't redial automatically.
 
-A scheduled callback uses Bolna’s native `scheduled_at`, so closing the browser does not stop execution. Calls are limited to 90 seconds. There are no automatic redials; a busy or unanswered attempt can be reviewed for a manual retry, while an active or uncertain attempt remains blocked.
+ASM, AvaniBot and text coaching use Llama 3.3 through a small authenticated Cloudflare Workers AI service. This lets those roles work with workspace context without putting another telephone call through the voice provider.
 
-## Demo boundaries
+## A few limits
 
-The store metrics, leads, scores and sample history are fixtures. Live call records and model responses are labelled separately. Inventory, WhatsApp, a CRM and the store’s staff calendar are not connected, so the app captures requests without inventing stock, discounts, EMI eligibility or bookings.
+You can browse without a number. Trying a phone call asks for your own Indian mobile number and consent. The trial provider may require recipient verification, and the demo has a shared usage allowance. Voice practice needs microphone access instead.
 
-Use your own Indian mobile number and consent when trying a telephone call. The provider’s trial may require recipient verification, and the demo has a shared usage allowance. Browser voice practice needs a microphone but no telephone number. These limits are documented in [setup](docs/SETUP.md).
+The app isn't connected to store inventory, WhatsApp, a CRM or staff availability. A callback or visit stays a request until the store confirms it. In the test, ₹10,000 was the customer's budget, not a price offered by the agent.
 
-## Checks and evidence
+[Test records](docs/verification) contain the saved results. [Submission details](docs/SUBMISSION.md) have the final links and email copy.
 
-The automated checks cover workspace isolation, duplicate calls and approvals, concurrent reservations, uncertain results, callback state, one-use human grants, transcript ownership and quoted coaching evidence. TypeScript and the production build pass.
+## AI assistance
 
-The [verification records](docs/verification) include the real recovery call, browser practice, two-way human call, executed follow-up, hosted agent flows and the 109.8-second recording. The recording shows the actual app and clearly dated playback of the original telephone test. [Submission details](docs/SUBMISSION.md) contain the final links and email copy.
+I used OpenAI Codex for research, implementation, debugging and checks. I chose the scenario, reviewed the opening, took the test calls and directed the product and visual iterations. The research was desk research and demo roleplays, rather than interviews with store teams.
 
-## AI assistance and my role
-
-I used **OpenAI Codex** for research, implementation, debugging and checks. I chose the recovery scenario, reviewed the opening, tested the phone and microphone flows, and directed the product/design iterations toward less unnecessary UI. The research was desk research plus these roleplays, not interviews with a representative set of retailers.
-
-The code was written for this assignment. The supplied HTML was used as a visual/behavioural reference, and its implementation was not copied into the repository. The incremental commit history is preserved. [My walkthrough notes](docs/EXPLAIN.md) cover the main product and engineering decisions.
+The app code was written for this assignment. The supplied HTML was the reference; its implementation wasn't copied into the repo. The commit history records the build as it happened.

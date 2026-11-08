@@ -1,14 +1,14 @@
-# Final PDF deliverable audit
+# PDF checklist
 
-Reviewed on **8 November 2026** against a freshly retrieved copy of Rashmi’s five-page `OnGround_Engineering_Assignment.pdf` (SHA-256 `7ebebe209693181568b1f462887596dfe7358a76cc06d0279c702b3033e60b2e`). This is an independent comparison of the PDF’s named requirements with the current component/API wiring, tests and saved browser/provider/recording evidence. It does not infer completion merely from an earlier checklist.
+Checked on 8 November 2026 against a fresh copy of Rashmi's five-page PDF. Its SHA-256 is `7ebebe209693181568b1f462887596dfe7358a76cc06d0279c702b3033e60b2e`.
 
-**Finding:** every named Must build item, every detailed screen bullet and all five listed bonuses has an implementation. Real AI-to-phone, browser voice practice, two-way human-to-phone and executed follow-up evidence exist. Calendar date-handling defects found during this audit were fixed and validated in the audited source; the deployed revision is identified in the release record. Remaining qualifications concern verification scope, trial restrictions and the clearly labelled recorded-call playback—not an unimplemented PDF screen.
+All required features and the five bonuses are implemented. This check also caught three Calendar bugs: the fixed Today highlight, sample events repeating in other years, and a missing empty state. Those are fixed in the [published release](verification/release.json).
 
 ## Must build and detailed screen bullets
 
 The implementation is in [workspace.tsx](../src/workspace.tsx), with the role workflows in [AgentPanel.tsx](../src/AgentPanel.tsx). The table follows PDF pages 2–4 rather than the implementation’s navigation labels.
 
-| PDF item                                     | Source-wiring check                                                                       | Result and evidence                                                                                               |
+| PDF item                                     | Implementation                                                                            | Result and evidence                                                                                               |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | App shell: sidebar                           | Six navigation buttons call `go(page)`; the three Plan destinations share the Plan group. | Implemented; hosted laptop/narrow shell checked.                                                                  |
 | App shell: top bar                           | Persistent workspace header, current section, search and notification controls.           | Implemented; visible in hosted UI/recording.                                                                      |
@@ -58,9 +58,9 @@ The implementation is in [workspace.tsx](../src/workspace.tsx), with the role wo
 
 The PDF explicitly makes the **DEMO strip and floating dial button optional**. Their absence is not a missing deliverable.
 
-## Calling and the cover’s agent vision
+## Role agents
 
-| Workflow          | Evidence read for this audit                                                                                           | What it establishes                                                                                                                                                                      |
+| Workflow          | Test record                                                                                                            | Result                                                                                                                                                                                   |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Walk-out Recovery | [live-call.json](verification/live-call.json)                                                                          | A real telephone conversation completed for 88 seconds, at a reported 9 US cents. Hindi budget/callback context was captured; store confirmation stayed pending.                         |
 | Pitch Coach       | [browser-voice.json](verification/browser-voice.json), [hosted-agents.json](verification/hosted-agents.json)           | Actual 31.9-second browser microphone conversation, five stored turns and subsequent grounded feedback; hosted text roleplay, scores and persistence also checked.                       |
@@ -90,14 +90,12 @@ The cover describes “one AI agent that creates the role agents every offline s
 
 The email is prepared, **not sent**. Preparing the package does not imply submission to the company.
 
-## Ground rules and verification boundaries
+## Notes
 
-- **Stack/sample data:** preferred React stack used. Local fixture module/JSON supplies sample store metrics, leads, scores and history, as allowed by the PDF.
-- **Original code:** tracked source contains the app’s own `index.html`; the supplied mock HTML/PDF are not committed. Reference implementation copying is not claimed or permitted.
-- **AI disclosure:** README names Codex and records Arnav’s product/test decisions alongside assisted implementation.
-- **Git:** actual incremental commits record implementation, provider integration, acceptance, fixes and delivery. Publication checks refer to the release record’s commit, not an assumed latest HEAD.
-- **Look:** restrained reference-inspired shell is retained. The deliberate hierarchy change places passive metrics behind expansions; it follows Arnav’s explicit product direction. Strict pixel identity is not claimed.
-- **Explore the original mock / latest Chrome:** static HTML/screenshots were inspected and the recreated product was checked in the in-app browser and Safari. A complete original-mock click-through and an independent latest-Chrome laptop pass are not established by the saved evidence. This is a process/verification qualification, not a missing named app screen.
-- **Automated checks:** 37 tests pass after the Calendar fixes, covering state/isolation/concurrency, real-request boundaries, manual retry protections, transcript ownership and evidence validation. TypeScript and production compilation pass. Calendar fixes additionally passed direct IST midnight/year-rollover and exact-date assertions. These checks do not substitute for real audio/provider evidence.
+- The app uses React and sample store data, as allowed by the brief. The mock files are not included in the repository.
+- The README names Codex and explains my role. The Git history preserves the implementation and fixes as they happened.
+- I kept the reference screen structure and palette, but moved passive metrics into expansions. This is a deliberate design change rather than a pixel-for-pixel copy.
+- Browser checks used the in-app browser and Safari. The saved evidence does not include a full click-through of the original HTML or a separate latest-Chrome pass.
+- All 37 tests and the production build pass. The Calendar fixes also passed IST midnight, year-rollover and exact-date checks, followed by a hosted check of Today and the empty agenda.
 
-Final-audit defects fixed in source: consistent IST Today/initial selection/highlight; sample events bounded to their full 2026 dates; and a matching empty-agenda predicate. No paid or telephone operation was made for this audit. Final build/deployment status is owned by [release.json](verification/release.json).
+The published app revision and final link checks are in [release.json](verification/release.json).

@@ -1,43 +1,19 @@
-# Product direction · 8 November 2026
+# Why I picked walk-out recovery
 
-Arnav chose walk-out recovery after asking for Indian retail research before building. Test budget: ₹200. Only the authorized test recipient is stored in private settings.
+A shopper leaving a mattress store does not necessarily mean the conversation is over. For this demo, I picked a customer who liked the product but hesitated over price and wanted to discuss the decision at home. That gives the call a useful job: understand the hesitation and agree a next step.
 
-## Evidence and implications
+Before building, I looked at experience-store journeys, language use and how online research connects to store purchases. This was desk research, followed by roleplay calls. I did not interview a representative group of retailers.
 
-1. The Sleep Company operates experience stores with staff assisting product selection, ordering, delivery and payment. Its store page lists UPI, cards and EMI. Design implication: capture a visit/callback request and the customer's blocker; do not optimize the demo for an immediate online checkout. Source: https://thesleepcompany.in/pages/our-store
-2. IAMAI/Kantar Internet in India 2024 reports 57% of urban internet users prefer Indic-language content. This is internet-content research, not evidence of phone-language preference. Hypothesis: ask for preference and test Hindi/Hinglish and English rather than assuming English or Hindi. Source: https://www.iamai.in/research/internet-india-2024-kantariamai-report
-3. Meta/RAI describes journeys spanning online research and store purchases. This is platform-associated research and not proof of our product's conversion impact. Design implication: retain walk-in, call and follow-up context in one lead. Source: https://about.fb.com/news/2026/02/ai-fuels-indias-omnichannel-shopping-surge-meta-retailers-association-of-india/
-4. The Sleep Company's trial page restricts eligibility by channel and product; EMI terms can include bank charges. Its location-specific EMI page contains inconsistent geography. Do not encode an unconditional trial, discount, delivery or EMI promise. Capture the question and hand it to store staff. Sources: https://thesleepcompany.in/pages/100-nights-trial and https://thesleepcompany.in/pages/no-cost-emi-mumbai
+Three choices came out of that work.
 
-This is desk research, not customer discovery. Budget, family discussion, mattress fit and timing are scenario hypotheses; no prevalence or revenue uplift is claimed.
+**Ask which language is comfortable.** The [IAMAI/Kantar report](https://www.iamai.in/research/internet-india-2024-kantariamai-report) gave useful context on Indic-language internet use. It does not tell me which language a particular shopper wants on a phone call. The agent asks. Hindi and Hinglish were useful in my actual test, with English retail terms mixed into the conversation.
 
-## First journey
+**Find out what the price objection means.** A shopper might need a lower price, a different product, payment information or time to speak with family. I wanted the agent to ask one question and listen before offering a next step. In my test, the customer stated a ₹10,000 budget. The app carries that forward as the customer’s budget, rather than turning it into a product quote.
 
-Sample shopper Mukunda tried a mattress and left undecided. AI identifies itself as an assignment demo, asks whether now is convenient, asks language preference, understands one blocker, and captures a callback or visit request. It confirms the request as a request; a human confirms store availability and commercial details.
+**Keep the store involved in the decision.** I used [The Sleep Company’s store journey](https://thesleepcompany.in/pages/our-store) as a reference for staff-assisted selection and payment questions. Its [trial](https://thesleepcompany.in/pages/100-nights-trial) and [EMI](https://thesleepcompany.in/pages/no-cost-emi-mumbai) pages also made it clear that terms need checking. The demo has no live catalogue or policy connection, so the agent captures those questions for staff. A requested return visit or callback is useful even when the shopper is not ready to buy.
 
-## Product principles proposed to Arnav
+The [Meta/RAI piece on online-to-store shopping](https://about.fb.com/news/2026/02/ai-fuels-indias-omnichannel-shopping-surge-meta-retailers-association-of-india/) was another reason to keep the store visit, phone conversation and follow-up together in the lead’s context. I used it to shape the journey; it does not establish a conversion result for this prototype.
 
-- Preserve the supplied screen hierarchy and restrained design.
-- Lead with a user's next action and the reason for it.
-- Maintain conversation continuity across the queue, lead detail, call and recent history.
-- Explain priority from observable facts; sample scores must not pretend to be a predictive model.
-- Distinguish requested, confirmed and completed actions.
-- Show only provider-backed call states and transcript data.
-- AI reduces repetition and prepares handoffs; staff own commercial commitments.
+The five roles then have fairly clear jobs. Recovery starts the conversation. The coach lets the associate practise the difficult part. ASM helps decide what to work on. The human tele-caller handles a conversation directly, and Follow-up carries an approved request through to a call. AvaniBot helps find the relevant context across that work.
 
-## Review checkpoints
-
-1. Account and caller number ready; review exact agent script before the first call.
-2. Listen to first call together; assess interruption, language switching, objections and next-step accuracy.
-3. Review dashboard → lead → call → outcome flow against mock before expanding.
-4. Required-screen pass, then two-minute evidence-led demo and README review.
-
-## Required screens · implemented locally
-
-Sidebar/topbar, dashboard, Plan outgoing/incoming/recent, calendar, Pulse home/channel, leads modal with paging. The standalone calling proof remains at /proof. See verification/manual-review.md for observed checks and limits.
-
-## Success and failure tests
-
-Success: recipient answers, AI identifies the demo, handles one natural objection, accurately captures a next step, provider completes the execution, app displays its actual result. No purchase or conversion claim.
-
-Failure tests: not a good time → callback request; no interest → stop; unsupported policy question → human handoff; no answer → honest status; uncertain provider response → no automatic redial.
+For the first version, I cared most about whether a real call could produce an accurate, usable handoff. The tests covered a real Hindi recovery call, browser practice, a two-way human call and an executed AI follow-up. The [verification records](verification) show what happened. I would need field testing to say whether this helps stores recover more sales.

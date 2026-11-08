@@ -1,47 +1,20 @@
-# Agent-first visual review · 8 November 2026
+# Design notes
 
-Arnav asked to approach this as a product manager/designer, remove UI where the system can do the work, and respect the assignment constraints. The outcome is a task-led interface within the supplied screen structure.
+I wanted the agent to open the app and know what to do next. The mock had the right screens, but the dashboard gave a lot of space to scores, earnings and charts before the calling work. I kept those sections and moved them behind **Performance & earnings**. The first card now points to a waiting customer or a callback that needs attention.
 
-## The design thesis
+The biggest change is after the call. In the first phone test, I said my budget was ₹10,000 and asked for a Hindi callback the next morning at 10. Those details were already in the conversation. Asking the agent to type them into another form felt like work the AI should remove.
 
-The agent should not reconstruct a conversation by reading a transcript and completing another form. The system prepares the next step; the agent reviews it, saves it or handles an exception. This is a workflow change supported by progressive disclosure, rather than an extra AI panel.
+The review screen now prepares that request. The agent can check the date, time, language and unresolved question, then save it. Missing details open the relevant inputs. The transcript and longer summary are there when the agent needs to check something. Store availability still needs confirmation, so the saved item stays a request.
 
-## Findings and implemented changes
+That led to a few smaller decisions:
 
-| Finding from the agent's perspective | Decision |
-| --- | --- |
-| Four KPI cards and two charts preceded the work | Put a single next-action card first. Performance, earnings and trends remain in labeled expansions. |
-| Scores were repeated in the header and dashboard | Remove header score/rank controls; preserve them in the relevant performance/Kudos areas. |
-| Queue rows hid the reason for calling | Show customer, stage, short reason, language and intent without expansion. Put history and actions inside the expanded row. |
-| A completed call left stale pre-call context in the queue | Show the actual callback request, preferred time and budget from that call. Lead details use the same context. |
-| Call review began with a long generated summary and full transcript | Lead with the suggested next action and its date/time/language. Summary, evidence and original transcript expand separately. |
-| Callback planning asked for details already captured on the phone | Use structured model extraction to prepare the request. Complete suggestions can be saved directly. Editing is optional; missing details open inputs. |
-| Repeated saves could create duplicate callbacks | Edit the existing local request instead of adding another request for the same lead. |
-| Requested callbacks still appeared in Who's waiting | Exclude leads with locally saved callback requests from that waiting shortlist. |
-| Small pale text competed with labels and badges | Increase working text and control sizes, improve contrast and reduce secondary emphasis. |
+- Queue rows show the reason for calling and the preferred language. The agent should have some context before opening a lead.
+- Lead fit and intent stay with the lead details, along with the buying signals. They are sample scores in this demo.
+- Saving the same customer’s callback updates the existing request. It also removes that customer from the waiting shortlist.
+- A busy call stays visibly busy. A retry needs a separate decision; the app keeps the earlier attempt in its history.
 
-## What the AI actually does
+One detail changed because of an actual model error. The extraction returned transliterated Hindi while labelling it as an exact customer quote. The fix was to use the original transcript lines as supporting evidence. Coaching scores also need an excerpt that matches something the associate actually said.
 
-A dedicated Retail Handoff extraction category is linked to the Bolna assignment agent. It asks about callback consent, requested date/time/language, stated budget, concern and supporting utterances. The actual completed transcript was analyzed using Bolna's dispositions test API with the original call date supplied. It returned 9 November 2026, 10:00 IST, Hindi and ₹10,000 correctly for this one test.
+I kept the sidebar, Plan views, Calendar, Pulse and paged Leads modal from the brief. The main departure is the order of attention within those screens. It follows the way I wanted to use the product: context, conversation, next step, then performance detail.
 
-The analysis is distinct from the original finalized telephone record. It did not place another call. The provider wallet still returned 491 US cents after analysis, unchanged from the post-call balance. This is not a guarantee about future extraction billing.
-
-An important observed failure: the model labeled transliterated Hindi as exact customer quotes. The application therefore ignores model-written evidence and displays the original `user:` lines from the transcript. It also validates dates, times and language values, ignores unanswered fields and keeps requests unconfirmed. Missing or invalid fields require editing. One successful extraction is not evidence of general accuracy.
-
-## Constraint map
-
-- Sidebar, topbar and all required screen destinations remain.
-- Dashboard KPI cards, progress, earnings, tasks and seven-day charts remain accessible; passive performance is collapsed by default.
-- Plan still includes ranked outgoing leads, expandable rows/paging, incoming callback actions and recent call review.
-- Calendar retains month navigation, Today, dots and day details.
-- Pulse retains home/agents/channels/Kudos and the pinned two-action/reply-card pattern. Chat and replies are saved in a private reviewer workspace.
-- Lead modal still opens from dashboard tasks, pages between leads, shows fit/intent scores and expandable buying signals. Score mechanics and long summaries are secondary details.
-- Real telephone calling remains available. No mock source was copied.
-
-This deliberately changes default dashboard prominence from the supplied screenshot while preserving its information and destinations. The rationale is the agent's next task; it should be made explicit in the submission.
-
-## Validation and limits
-
-The current suite has 32 passing tests, including no implied callback consent, invalid/missing model output, original customer evidence and uncertain-send protection. Local browser review checked the prepared actual-call result, exact transcript expansion, callback detail expansion, all required dashboard panels and charts, and 390px layouts without horizontal overflow. The existing saved-request path was exercised in the browser. The direct first-save path is implemented but was not separately exercised in a clean browser profile during this pass.
-
-Callback requests remain separate from staff confirmations. The Follow-up agent can now schedule and cancel native provider calls, verified in the hosted app. Private hosted persistence, signed reviewer sessions and concurrent writes are implemented and checked. Independent agent usability tests and measured time savings remain open.
+I have checked the flows through roleplay calls and the prototype. I have not measured time saved with a retail team. The next useful test would be to give an associate a completed call and watch whether they can finish the handoff without copying information between screens. The current checks are in [verification](verification).

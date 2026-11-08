@@ -1,22 +1,28 @@
-# Local verification · 8 November 2026
+# First local review · 8 November 2026
 
-- [x] Real telephone call accepted, ringing, connected and completed.
-- [x] Provider finalized 88-second conversation, 9 US cents; wallet decreased 500 → 491 cents.
-- [x] Arnav's voice feedback: natural enough; continue to screens.
-- [x] Dashboard shell, KPI/progress/waiting/earnings/tasks/charts visually reviewed.
-- [x] Dashboard hot-lead task opens lead modal. Next page changes customer; previous boundary disabled.
-- [x] Outgoing rows expand; queue page 2 shows remaining three leads; next boundary disabled.
-- [x] Incoming queue shows five rows, each with a callback action.
-- [x] Recent live test opens provider summary and actual Hindi transcript.
-- [x] Reviewed callback request saved for 9 Nov 2026, 10:00 IST, Hindi, ₹10,000 budget context.
-- [x] Calendar shows that requested callback; month changes to December; Today returns to 8 Nov.
-- [x] Pulse channel opens, own message appears right with time; custom pinned response records locally.
-- [x] Reload preserves callback request. Channel state uses the same persisted local storage mechanism.
-- [x] Laptop 1440×1000 layout visually inspected.
-- [x] Phone 390×844 layout has navigation; Recent accessible. DOM body/document/viewport widths all 390.
-- [x] Browser error log empty during reviewed flows.
-- [ ] Hosted authentication, persistence, cost enforcement and real-browser acceptance.
-- [ ] Human-to-human or inbound calling.
-- [ ] Final two-minute recording, repository publication and submission.
+These notes cover the local prototype before hosting and the later agent integrations.
 
-This is a local/browser review, not independent customer testing or a pixel-diff comparison. Reference PDF screenshots were inspected; native HTML click-through was blocked by the browser's local-file policy earlier in the task. No mock source was reused.
+Arnav answered the recovery agent’s telephone call and roleplayed a shopper. Bolna reported an 88-second completed conversation costing 9 US cents; the wallet moved from 500 to 491 cents. His feedback was “natural enough; continue to screens.” The review showed the provider’s summary and original Hindi transcript.
+
+The local screen checks covered:
+
+- Dashboard shell, KPI cards, progress, waiting customers, earnings, tasks and charts.
+- The dashboard lead modal, next/previous paging and disabled previous control on the first lead.
+- Expandable outgoing rows, the remaining three leads on page two, and the disabled next control on the last page.
+- Five Incoming rows, each with a callback action.
+- A reviewed callback request for 9 November, 10:00 IST, Hindi, retaining the ₹10,000 budget context. Calendar showed it; switching to December and returning with Today worked.
+- A Pulse message on the right with its time, plus a custom response to the pinned handoff.
+
+At this stage, callback requests and channel responses used browser local storage. Reload preserved the callback request. The laptop layout was checked at 1440×1000. At 390×844, navigation and Recent remained usable, and the body, document and viewport each measured 390 pixels wide. The browser error log was empty during these flows.
+
+The early visual comparison used the PDF screenshots. The browser blocked the reference HTML’s local-file click-through; its source was not copied. This was a manual review with Arnav, without a pixel-diff comparison or an independent customer study.
+
+## Later checks
+
+The hosted version replaced local storage with server persistence. See [hosted UI notes](hosted-ui.md) for those checks. Browser practice, human calling, follow-up calling and the submission package were completed later the same day:
+
+- [Browser voice practice and saved coaching feedback](browser-voice.json)
+- [Human browser-to-phone call and two-way audio confirmation](human-call.json)
+- [Completed follow-up telephone call](followup-live.json)
+- [109.8-second screen recording](recording.json)
+- [Production release, repository and public-link checks](release.json)

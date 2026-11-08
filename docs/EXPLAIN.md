@@ -1,56 +1,39 @@
-# How to explain this assignment
+# Why I built it this way
 
-## Lead with the job
+The starting point was a mattress shopper who liked the product but walked out over price. I chose this because it gives the associate something specific to do: find out what is holding the customer back and arrange a useful follow-up.
 
-“A shopper tried a mattress and left undecided. The associate needs to understand the hesitation, agree a useful next step and give the store enough context to follow through. I built the required Call Centre screens around that job and connected a real phone conversation.”
+I wanted this to feel like a tool for an Indian store associate. Language, price and a decision involving family all belong in the conversation. They shouldn't get flattened into a “warm lead” badge. The research behind this is in [PRODUCT.md](PRODUCT.md); it was desk research, followed by demo calls with me playing the shopper.
 
-Avoid claiming conversion lift. One authorized roleplay establishes that the calling and handoff can work; it does not establish business impact.
+## The bit I cared about most
 
-## Explain the product and design contribution
+Once the calling worked, I asked for another pass on the interface. My direction was simple: if AI has already heard the customer, why should the associate fill out the same details again?
 
-The mock provides the required destinations and information. The design refinement changes their prominence: the next useful action appears first, while metrics, edits and evidence expand when needed. The agent should not have to re-enter a day, time, language and budget that the customer already stated.
+That changed the order of the screen. The dashboard starts with the next customer or request that needs attention. The KPIs and charts from the brief are still available, but they open when you need them. After a call, the app prepares the callback details. The associate can save them, edit them, or open the conversation to check what was said.
 
-The call review therefore offers a prepared next-step request, with the original transcript available as evidence. A request is distinct from a confirmed store booking. This matters in Indian retail, where price/payment questions, language preference and a family return visit can be more useful context than a generic “warm lead” label.
+There is a small but useful distinction in the test result. The customer said ₹10,000 was their budget and asked for a Hindi callback at 10 am the next day. Neither statement means the mattress costs ₹10,000 or that the store has confirmed the slot. The app keeps those as customer requests.
 
-One observed model failure changed the design: an extraction claimed to quote the customer but returned transliterated text. Supporting evidence now comes from actual customer transcript lines, rather than treating a generated quotation as proof. That is a concrete reason for the expandable evidence, not just a decorative trust label.
+The reference gave me the screen structure and visual direction. I kept its destinations, green/purple palette and required information. Moving the performance panels into expansions was a deliberate change to make room for the work.
 
-## Explain the six role experiences
+## What the calls taught us
 
-- **Recovery:** the AI speaks to a consenting participant’s phone, asks about the obstacle and captures a requested next step.
-- **Pitch Coach:** the shopper role pushes back on price. The associate practises by text or browser voice, then receives feedback on their actual turns, with evidence and one better next line.
-- **ASM:** the assistant reads the current workspace, prioritises commitments and proposes tasks. Approval creates internal work; no store employee is silently notified.
-- **Human Tele-caller:** a person speaks from the browser to the test phone, with context, mute/end controls and an explicitly human-reported outcome.
-- **Follow-up:** saving a request does not dial. A separate approval sends one immediate or scheduled provider call, with the unresolved context carried forward.
-- **AvaniBot:** a scoped assistant for workspace questions and suggested next steps. It does not invent a catalogue, store availability or a WhatsApp delivery.
+The first recovery call lasted 88 seconds. I played the shopper, used Hindi and raised the price objection. The voice felt natural enough to continue with the screens. We later checked human calling in both directions, browser voice practice, and an AI follow-up. The [README](../README.md) links to those results.
 
-The labels represent different jobs, rather than six copies of the same chat interface.
+One extraction result was more revealing than the successful call: the model presented transliterated Hindi as an exact quote. The call review now takes supporting lines from the original customer transcript. Coaching feedback also checks its quoted evidence against what the associate actually said. If there isn't enough evidence to score something, that part stays unscored.
 
-## Explain the implementation
+These were demo roleplays with me, so I don't have evidence yet that the product improves store conversion or saves associates time. Those are the next things I would test with a store team.
 
-**Original UI.** React and TypeScript handle navigation, expansion, lead paging, dialogs and calendar state. Recharts renders the required trends. Store metrics and profiles are marked fixtures, as the brief permits. The supplied HTML’s implementation was not copied.
+## How the pieces fit
 
-**Server-owned effects.** Provider master credentials stay on the server. A paid operation is reserved and a call record is written before the external request. Repeated or competing copies of a request cannot create two calls. A response timeout is uncertain acceptance, so it blocks blind redial.
+React handles the screens. The Node server owns calls and saved work, so credentials stay off the page. Bolna handles the AI phone calls and voice practice; Vobiz connects the browser microphone to a phone for the human workflow. Text coaching, ASM and AvaniBot use a small Workers AI service.
 
-**Truthful states.** “Queued” is not “answered.” A disconnected line can still be processing. Final transcript, duration and cost wait for provider finalisation. Human browser events do not manufacture provider completion; notes and dispositions remain operator-reported.
+The roles have different jobs. Pitch Coach plays the shopper and reviews the associate's response. ASM suggests work that someone must approve. AvaniBot answers questions about the current workspace. Follow-up carries the saved customer context into a new call. Saving a callback request alone does not dial the customer.
 
-**Durable workspaces.** Signed HttpOnly cookies separate anonymous reviewer sessions. Private Vercel Blob and conditional writes preserve workspace changes across serverless instances; local JSON writes are serialized and atomic. This is an assignment workspace, not production employee authentication or a CRM.
+There are a couple of engineering decisions I'd walk through in a review. A call is reserved before the provider is contacted, which prevents two clicks from placing two calls. If the provider times out, the app treats the result as uncertain instead of inviting another dial. Scheduled calls are handed to Bolna, so execution doesn't depend on someone leaving a browser tab open. Private Blob storage keeps each reviewer's messages, requests and results between visits.
 
-**Scheduled work.** Bolna receives an explicit scheduled time after approval. The provider executes it after the page closes. There is no local timer masquerading as autonomous follow-up, and no automatic redial policy.
+## What I'd do next
 
-**Dedicated reasoning integration.** ASM, AvaniBot and text coaching use Llama 3.3 JSON mode through an authenticated Workers AI service. Vercel supplies bounded workspace context and validates structured output, canonical lead IDs and exact supporting evidence. This replaced an unreliable reuse of voice-provider extraction for general reasoning. Voice agents remain on Bolna. Task approval is a separate server action, so an answer cannot silently execute a proposal.
+I'd put this in front of a few store associates and watch the handoff. Can they act on the prepared request without rereading the call? What do they still have to ask the customer again? That would tell me more than adding another agent to Pulse.
 
-## Show evidence in the right order
+The next integration would be the store's real availability and product information. Right now those are deliberately absent: a staff member still needs to confirm a visit, a price or a payment option.
 
-1. Demonstrate the required navigation and a lead’s context.
-2. Show the verified real call’s saved result: **completed, 88 seconds, 9 US cents**, Hindi conversation, ₹10,000 stated budget and a requested 9 November 10 AM Hindi callback. Store confirmation stayed pending.
-3. Show the proposed request, then the saved agenda item. Do not imply that this alone proves a scheduled phone callback happened.
-4. Run a live workspace question or coaching exchange, inspect the proposed output, approve an appropriate task and show persistence.
-5. Show human/voice/scheduled-call acceptance only when those specific live checks have actually completed. JWT mint and SIP registration prove readiness to register; they do not prove two-way audio.
-
-## Be precise about ownership and limits
-
-Arnav chose the scenario, reviewed the opening, participated in the phone call, judged voice naturalness and directed the reduction of unnecessary UI. Codex assisted research, original implementation, design iteration and tests. Explain that division plainly.
-
-Desk research and one roleplay informed the Indian retail choices. They do not replace interviews with multiple stores. The demo has no live inventory, WhatsApp, staff calendar or independently measured conversion uplift. Trial telephone recipients may need provider verification. Shared count-based allowances bound demo use, but do not guarantee a rupee-denominated cap.
-
-The release checklist must keep the final evidence honest: 37 passing tests, a compiled build, registration, browser interaction, real audio and a scheduled callback each validate different parts of the system.
+I used Codex for the implementation, research and checks. My contribution was choosing the use case, testing the conversations, and directing the product and visual iterations. The source and [setup guide](SETUP.md) explain the implementation in more detail.
