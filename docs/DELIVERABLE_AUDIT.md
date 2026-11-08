@@ -2,7 +2,7 @@
 
 This maps Rashmi’s assignment email, five-page PDF and supplied HTML mock to the current implementation. It separates implementation from provider and browser acceptance. Final public links and recording checks belong in [SUBMISSION.md](SUBMISSION.md).
 
-**Current position:** required screen coverage and all requested role workflows are implemented. Real AI telephone calling is proved. The public Vercel app and public GitHub source are live. Hosted persistence, isolated reviewer sessions, the rendered core flows and native scheduled-call cancellation are verified. The dedicated intelligence service has passed hosted roleplay, feedback, workspace-question and task approval/completion checks. Browser voice practice, two-way human phone audio and the executed AI follow-up are now verified. The submission recording is being finalized.
+**Current position:** required screen coverage and all requested role workflows are implemented. Real AI telephone calling is proved. The public Vercel app and public GitHub source are live. Hosted persistence, isolated reviewer sessions, the rendered core flows and native scheduled-call cancellation are verified. The dedicated intelligence service has passed hosted roleplay, feedback, workspace-question and task approval/completion checks. Browser voice practice, two-way human phone audio and the executed AI follow-up are now verified. The finished 109.80-second Safari recording shows the actual interface and dated real-call playback.
 
 ## Required screen coverage
 

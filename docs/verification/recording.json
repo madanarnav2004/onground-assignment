@@ -1,0 +1,111 @@
+{
+  "verifiedAt": "2026-11-08T15:28:53.926916+00:00",
+  "artifact": "public/submission.mp4",
+  "publicPath": "/submission.mp4",
+  "durationSeconds": 109.8,
+  "sizeBytes": 2213051,
+  "sha256": "3b64310b8bb174f88693531c1dd2c206b07a44e2b515222a2882cdb63322bc4b",
+  "video": {
+    "codec": "H.264",
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  },
+  "audio": {
+    "codec": "AAC",
+    "source": "Native system-audio capture of playback of the original completed telephone-call excerpt; no microphone narration added.",
+    "measuredCallPlayback": {
+      "seconds": 19.9386875,
+      "rmsDbfs": -26.13,
+      "peakDbfs": -3.08
+    }
+  },
+  "provenance": {
+    "capture": "Native macOS screen recording of the actual hosted application in Safari",
+    "sourceFilename": "Screen Recording 2026-11-08 at 8.39.31 PM.mov",
+    "sourceDurationSeconds": 791.426667,
+    "usedSourceRangesSeconds": [
+      [
+        638,
+        647,
+        1,
+        false
+      ],
+      [
+        647,
+        653,
+        1,
+        false
+      ],
+      [
+        653,
+        672,
+        1,
+        false
+      ],
+      [
+        672,
+        680,
+        1.3,
+        false
+      ],
+      [
+        680,
+        698,
+        1,
+        true
+      ],
+      [
+        705,
+        721,
+        1,
+        true
+      ],
+      [
+        730,
+        748,
+        1,
+        false
+      ],
+      [
+        748,
+        776,
+        2.8,
+        false
+      ],
+      [
+        776,
+        790,
+        2,
+        false
+      ]
+    ],
+    "editing": "Only the final Safari app tour is used. Earlier chat and setup footage is excluded. Native recording controls and desktop edges are cropped. Idle periods are cut; two silent navigation/message-composition sections are accelerated. Original call-playback sections remain at normal speed. No product state or transcript is fabricated. The remaining bottom desktop-pet overlay is cropped out; the retained app viewport is letterboxed without changing product content or covering primary actions.",
+    "callEvidence": "UI explicitly labels playback RECORDED TEST \u00b7 8 NOV, with an excerpt of the original 88-second completed Hindi call."
+  },
+  "visibleCoverage": [
+    "Dashboard and expanded performance cards",
+    "Lead scores, buying signals and next/previous paging",
+    "Calls-to-make queue and pagination",
+    "Incoming missed calls and callback actions",
+    "Recent calls and original verified call review",
+    "Real call playback with prepared callback request",
+    "Calendar request after saving the prepared handoff",
+    "Pulse role-agent catalogue",
+    "Channel pinned handoff and actual message composition/send"
+  ],
+  "inspection": {
+    "contactSheet": "docs/recording/contact-final.png",
+    "cutBoundaries": "docs/recording/cut-boundaries.png",
+    "privateChatExcluded": true,
+    "fullRecipientNumberExcluded": true,
+    "credentialsExcluded": true,
+    "audioNotSilent": true,
+    "withinTwoMinutes": true
+  },
+  "limits": [
+    "The short recording does not demonstrate every agent backend; the README and verification records document their independent checks.",
+    "This is a recorded-call playback demonstration, not a newly dialled call during screen capture.",
+    "Store data is sample data and the callback remains a request awaiting store confirmation."
+  ]
+}

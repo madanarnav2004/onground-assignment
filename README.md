@@ -2,7 +2,7 @@
 
 An original React and TypeScript implementation of the supplied Call Centre mock, shaped around an Indian retail associate’s next useful action. The central journey is **walk-out recovery → real conversation → reviewed next step → follow-up**.
 
-[Live app](https://onground-arnav.vercel.app) · [Source](https://github.com/madanarnav2004/onground-assignment) · [Reviewer guide](docs/REVIEWER_GUIDE.md)
+[Live app](https://onground-arnav.vercel.app) · [109-second demo](https://onground-arnav.vercel.app/submission.mp4) · [Source](https://github.com/madanarnav2004/onground-assignment) · [Reviewer guide](docs/REVIEWER_GUIDE.md)
 
 The app is deployed in Vercel’s Mumbai region. Verified features and the remaining live-audio and screen-recording checkpoints are tracked in [the delivery checklist](docs/SUBMISSION.md).
 
