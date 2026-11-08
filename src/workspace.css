@@ -1728,3 +1728,671 @@
     color: #fff;
   }
 }
+
+/* Agent-first hierarchy: work is visible; supporting detail is on demand. */
+.og-app {
+  font-size: 13px;
+  color: #30443a;
+}
+.og-page-banner {
+  min-height: 88px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.og-page-banner h1 {
+  font-size: 21px;
+}
+.og-page-banner p {
+  font-size: 11px;
+  color: #d9daec;
+}
+.og-topbar {
+  font-size: 11px;
+}
+.og-side-nav button {
+  font-size: 12px;
+  padding: 12px;
+}
+.og-focus-card {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-top: 22px;
+  padding: 21px;
+  background: #fff;
+  border: 1px solid #dce7df;
+  border-left: 3px solid #4a9670;
+  border-radius: 8px;
+}
+.og-focus-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #edf5ef;
+  color: #4d8b66;
+  flex-shrink: 0;
+}
+.og-focus-card > div {
+  flex: 1;
+}
+.og-focus-card .og-overline {
+  color: #6d8976;
+  font-size: 9px;
+}
+.og-focus-card h2 {
+  font-size: 17px;
+  line-height: 1.45;
+  margin: 5px 0;
+}
+.og-focus-card p {
+  color: #6e8175;
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+.og-primary,
+.og-secondary {
+  font-size: 12px !important;
+  padding: 10px 14px;
+  min-height: 38px;
+}
+.og-primary {
+  background: #246b4f;
+}
+.og-shift-line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 17px 2px 19px;
+  color: #7d8b82;
+  font-size: 11px;
+}
+.og-shift-line strong {
+  font-weight: 500;
+  color: #536f5d;
+}
+.og-shift-proof {
+  margin-left: auto;
+  font-size: 10px;
+  color: #72927d;
+}
+.og-section-title {
+  font-size: 10px;
+  color: #65796b;
+  padding: 15px 16px;
+  letter-spacing: 0.6px;
+}
+.og-person-row {
+  padding: 16px;
+}
+.og-person-row strong,
+.og-lead-row strong,
+.og-incoming-row strong,
+.og-recent-row strong,
+.og-pulse-row strong {
+  font-size: 13px;
+}
+.og-person-row small,
+.og-lead-row small,
+.og-incoming-row small,
+.og-recent-row small,
+.og-pulse-row small {
+  font-size: 11px;
+  color: #718378;
+  line-height: 1.5;
+  margin-top: 5px;
+}
+.og-waiting,
+.og-tasks {
+  margin-top: 0;
+}
+.og-tasks {
+  border-top: 1px solid #e4e7ed;
+}
+.og-tasks > button {
+  padding: 15px 16px;
+  font-size: 12px;
+}
+.og-tasks > button > span {
+  font-size: 10px;
+  color: #758578;
+}
+.og-tasks > button > svg:first-child {
+  color: #7f967f;
+}
+.og-tasks > .og-section-title {
+  padding: 15px 16px;
+}
+.og-badge {
+  font-size: 9px;
+  padding: 5px 7px;
+}
+.og-text-button {
+  font-size: 11px !important;
+}
+.og-overline {
+  font-size: 9px;
+  color: #748b7a;
+}
+.og-performance {
+  margin-top: 22px;
+  background: #fff;
+  border: 1px solid #e4e8e7;
+  border-radius: 7px;
+  overflow: hidden;
+}
+.og-performance > summary,
+.og-score-detail > summary,
+.og-transcript-detail > summary,
+.og-summary-detail > summary,
+.og-edit-fields > summary {
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 17px;
+  font-size: 12px;
+  color: #60796a;
+}
+.og-performance > summary::-webkit-details-marker,
+.og-score-detail > summary::-webkit-details-marker,
+.og-transcript-detail > summary::-webkit-details-marker,
+.og-summary-detail > summary::-webkit-details-marker,
+.og-edit-fields > summary::-webkit-details-marker {
+  display: none;
+}
+.og-performance > summary > div {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.og-performance > summary > span {
+  margin-left: auto;
+  color: #7f8c83;
+  font-size: 11px;
+}
+.og-performance > summary > svg:last-child,
+.og-score-detail > summary > svg:last-child,
+.og-transcript-detail > summary > svg:last-child,
+.og-summary-detail > summary > svg:last-child,
+.og-edit-fields > summary > svg:last-child {
+  margin-left: auto;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.og-performance[open] > summary > svg:last-child,
+.og-score-detail[open] > summary > svg:last-child,
+.og-transcript-detail[open] > summary > svg:last-child,
+.og-summary-detail[open] > summary > svg:last-child,
+.og-edit-fields[open] > summary > svg:last-child {
+  transform: rotate(180deg);
+}
+.og-performance-body {
+  padding: 0 17px 17px;
+  border-top: 1px solid #edf1ed;
+}
+.og-performance .og-kpis {
+  margin: 17px 0;
+}
+.og-performance-grid {
+  display: grid;
+  grid-template-columns: 1.08fr 1fr;
+  gap: 17px;
+}
+.og-performance .og-progress-card {
+  align-self: start;
+}
+.og-trends {
+  margin-top: 15px;
+}
+.og-trends > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  font-size: 11px;
+  color: #748b7b;
+}
+.og-kpi > div {
+  font-size: 11px;
+  color: #6e7e73;
+}
+.og-kpi small {
+  font-size: 10px;
+}
+.og-kpi > strong {
+  font-size: 23px;
+}
+.og-list-heading h2 {
+  font-size: 15px;
+}
+.og-list-heading p {
+  font-size: 11px;
+  color: #75877b;
+}
+.og-list-heading {
+  padding-top: 24px;
+}
+.og-search input {
+  font-size: 12px;
+}
+.og-plan-tabs button {
+  font-size: 12px;
+  padding: 15px 4px;
+}
+.og-lead-row {
+  padding: 19px 17px;
+  gap: 14px !important;
+}
+.og-lead-row .og-avatar {
+  width: 36px;
+  height: 36px;
+}
+.og-row-reason {
+  display: block;
+  font-size: 12px;
+  color: #607a68;
+  font-weight: 400;
+  line-height: 1.6;
+  margin-top: 7px;
+  max-width: 650px;
+}
+.og-language {
+  font-size: 11px;
+  color: #6d8273;
+}
+.og-score {
+  background: transparent;
+  color: #7b8e81;
+  font-size: 10px;
+  gap: 4px;
+}
+.og-score svg {
+  width: 12px;
+}
+.og-expanded {
+  padding: 2px 19px 19px 67px;
+  font-size: 12px;
+}
+.og-expanded p {
+  display: none;
+}
+.og-chips {
+  margin: 8px 0;
+}
+.og-chips > span {
+  font-size: 10px;
+}
+.og-incoming-row,
+.og-recent-row {
+  padding: 17px;
+}
+.og-incoming-row .og-value {
+  font-size: 10px;
+  color: #6d8d77;
+}
+.og-recent-row > span:not(:first-child) {
+  font-size: 11px;
+  color: #6e8174;
+}
+.og-paging {
+  font-size: 11px;
+}
+.og-lead-reason {
+  font-size: 13px;
+  color: #607969;
+  line-height: 1.7;
+}
+.og-lead-person h2 {
+  font-size: 17px;
+}
+.og-lead-person p {
+  font-size: 11px;
+  color: #798b7e;
+}
+.og-next-step {
+  font-size: 12px;
+}
+.og-score-detail {
+  margin: 15px 0;
+  border: 1px solid #e6e9ee;
+  border-radius: 6px;
+  padding: 0 12px;
+}
+.og-score-detail > summary {
+  padding: 12px 0;
+  font-size: 11px;
+}
+.og-score-detail > summary > span {
+  margin-left: auto;
+  color: #8b789f;
+  font-size: 10px;
+}
+.og-fit > div:first-child {
+  font-size: 11px;
+}
+.og-lead-detail {
+  font-size: 11px;
+  padding: 12px;
+  color: #6f5d85;
+  background: #fbfafc;
+}
+.og-lead-detail p {
+  font-size: 12px;
+  color: #6c7c70;
+  line-height: 1.75;
+}
+.og-lead-modal > .og-actions {
+  position: sticky;
+  bottom: -23px;
+  background: #fff;
+  padding: 16px 0 2px;
+  margin: 8px 0 0;
+  border-top: 1px solid #edf0ec;
+}
+.og-next-action-card {
+  margin: 20px 0;
+  background: #f1f7f2;
+  border: 1px solid #d6e7db;
+  border-radius: 8px;
+  padding: 18px;
+}
+.og-next-action-card > .og-section-title {
+  padding: 0;
+  color: #568268;
+  font-size: 9px;
+}
+.og-next-action-card h2 {
+  font-size: 19px;
+  margin: 13px 0 12px;
+}
+.og-next-action-card p {
+  font-size: 13px;
+  color: #65806e;
+  margin-top: 17px;
+}
+.og-handoff-facts {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.og-handoff-facts > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid #dce9df;
+  border-radius: 5px;
+  background: #ffffff7f;
+  font-size: 12px;
+  color: #4f755b;
+}
+.og-review-heading h2 {
+  font-size: 17px;
+}
+.og-review-heading p {
+  font-size: 11px;
+  color: #6f8377;
+}
+.og-review-summary {
+  font-size: 13px;
+  color: #607967;
+}
+.og-summary-detail,
+.og-transcript-detail {
+  margin: 10px 0;
+  border: 1px solid #e6ebe7;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.og-summary-detail > summary,
+.og-transcript-detail > summary {
+  padding: 14px;
+  font-size: 12px;
+}
+.og-summary-detail > p {
+  padding: 0 15px 12px;
+  font-size: 12px;
+  color: #6f8275;
+}
+.og-transcript-detail > summary > span {
+  margin-left: auto;
+  font-size: 10px;
+  color: #9aa79d;
+}
+.og-transcript {
+  padding: 0 15px 15px;
+  font-size: 13px;
+}
+.og-transcript > div {
+  font-size: 13px;
+  line-height: 1.75;
+}
+.og-transcript strong {
+  font-size: 10px;
+}
+.og-provider-details {
+  background: transparent;
+  font-size: 11px;
+}
+.og-prepared-request {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: #f0f7f2;
+  border: 1px solid #dbe8df;
+  border-radius: 8px;
+  padding: 18px;
+}
+.og-prepared-request > strong {
+  font-size: 21px;
+  color: #365b44;
+  margin-top: 5px;
+}
+.og-prepared-request > span:not(.og-overline) {
+  font-size: 12px;
+  color: #608069;
+}
+.og-prepared-request p {
+  font-size: 12px !important;
+  color: #6e8575;
+  margin: 8px 0 0;
+}
+.og-callback-form > p {
+  font-size: 12px;
+  color: #6c8373;
+}
+.og-edit-fields {
+  border: 1px solid #e2e9e3;
+  border-radius: 6px;
+  padding: 0 14px;
+}
+.og-edit-fields > summary {
+  padding: 13px 0;
+  font-size: 11px;
+}
+.og-edit-fields > label {
+  margin: 0 0 15px;
+  font-size: 12px;
+}
+.og-callback-form input,
+.og-callback-form select,
+.og-callback-form textarea {
+  font-size: 13px;
+}
+.og-call-console p {
+  font-size: 12px;
+  color: #6e8274;
+}
+.og-footnote {
+  font-size: 10px !important;
+  color: #7a8a7f;
+}
+.og-pinned h3 {
+  font-size: 14px;
+}
+.og-pinned p {
+  font-size: 12px;
+  color: #877a56;
+}
+.og-chat-bubble {
+  font-size: 12px;
+  color: #526f5b;
+}
+.og-chat-author {
+  font-size: 10px;
+}
+.og-chat-author time {
+  font-size: 9px;
+}
+.og-pulse-search input,
+.og-chat-compose input {
+  font-size: 12px;
+}
+.og-channel-header h2 {
+  font-size: 14px;
+}
+.og-channel-header p {
+  font-size: 10px;
+}
+.og-avani-card p {
+  font-size: 12px;
+  color: #ece3f5;
+}
+.og-calendar-grid button {
+  font-size: 13px;
+}
+.og-weekday {
+  font-size: 10px;
+  color: #75877b;
+}
+.og-agenda-item > strong {
+  font-size: 13px;
+}
+.og-agenda-item > span,
+.og-agenda-item p {
+  font-size: 11px;
+}
+.og-footer {
+  font-size: 9px;
+  color: #839289;
+}
+@media (max-width: 760px) {
+  .og-focus-card {
+    padding: 17px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .og-focus-card > div {
+    min-width: 220px;
+  }
+  .og-focus-card h2 {
+    font-size: 16px;
+  }
+  .og-focus-card > .og-primary {
+    margin-left: 54px;
+  }
+  .og-focus-card .og-focus-icon {
+    width: 36px;
+    height: 36px;
+  }
+  .og-shift-line {
+    gap: 9px;
+    font-size: 10px;
+  }
+  .og-shift-proof {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+  .og-dashboard-grid {
+    gap: 16px;
+  }
+  .og-performance > summary {
+    gap: 9px;
+    flex-wrap: wrap;
+    padding: 15px;
+  }
+  .og-performance > summary > span {
+    margin-left: 25px;
+    order: 3;
+    flex-basis: 100%;
+    font-size: 10px;
+  }
+  .og-performance > summary > svg:last-child {
+    margin-left: auto;
+  }
+  .og-performance-grid {
+    grid-template-columns: 1fr;
+  }
+  .og-person-row small {
+    font-size: 10px;
+  }
+  .og-tasks > button {
+    font-size: 11px;
+  }
+  .og-tasks > button > span {
+    font-size: 9px;
+  }
+  .og-row-reason {
+    font-size: 11px;
+  }
+  .og-lead-row {
+    padding: 16px 12px;
+  }
+  .og-score {
+    font-size: 9px;
+  }
+  .og-language {
+    display: none;
+  }
+  .og-lead-row .og-avatar {
+    width: 30px;
+    height: 30px;
+  }
+  .og-score-detail > summary > span {
+    font-size: 9px;
+  }
+  .og-handoff-facts {
+    gap: 6px;
+  }
+  .og-handoff-facts > span {
+    font-size: 11px;
+  }
+  .og-prepared-request > strong {
+    font-size: 20px;
+  }
+  .og-transcript-detail > summary > span {
+    display: none;
+  }
+}
+.og-call-guidance > summary,
+.og-call-status-detail > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  padding: 12px 0;
+  font-size: 11px;
+  color: #728b79;
+  list-style: none;
+  border-bottom: 1px solid #e7ede8;
+}
+.og-call-guidance > summary::-webkit-details-marker,
+.og-call-status-detail > summary::-webkit-details-marker {
+  display: none;
+}
+.og-call-guidance .og-call-checklist {
+  margin: 16px 0;
+  font-size: 11px;
+}
+.og-call-console > section > h2 {
+  margin-top: 15px;
+}
+.og-tasks {
+  height: 100%;
+}

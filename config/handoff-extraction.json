@@ -1,0 +1,13 @@
+{
+  "category": "Retail Handoff",
+  "model": "gpt-4.1-mini",
+  "questions": {
+    "callback_requested": "Did the CUSTOMER explicitly request or accept a callback? Reply exactly yes or no. Do not infer consent from an assistant suggestion alone.",
+    "callback_date": "What calendar date did the CUSTOMER request for a callback? Resolve relative days using the provided call_date in Asia/Kolkata (IST). Reply only YYYY-MM-DD, or empty string if unspecified or ambiguous. Do not invent a date.",
+    "callback_time": "What local IST time did the CUSTOMER request for a callback? Reply only HH:MM in 24-hour format, or empty string if unspecified or ambiguous. Do not invent a time.",
+    "language": "Which language did the CUSTOMER explicitly prefer for the callback? Reply Hindi, English, Kannada, Tamil, Telugu, or Other. Reply empty string if not specified. Do not infer from their identity.",
+    "budget_inr": "What budget in INR did the CUSTOMER explicitly state? Reply digits only without currency punctuation; e.g. दस हज़ार is 10000. Reply empty string if unstated. This is customer budget, never a product quote.",
+    "concern": "Describe the obstacle the CUSTOMER expressed in one short English sentence. Do not invent a concern. Reply empty string if no concern was stated.",
+    "evidence": "Give the exact CUSTOMER utterances supporting callback day, time, language and budget. Quote the transcript verbatim; do not include assistant claims as customer evidence."
+  }
+}

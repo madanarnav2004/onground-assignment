@@ -46,6 +46,7 @@ type Followup = {
   time: string;
   language: string;
   note: string;
+  sourceCallId?: string;
 };
 type Message = { author: string; text: string; time: string; mine?: boolean };
 function stored<T>(key: string, fallback: T): T {
@@ -165,8 +166,8 @@ export function Workspace() {
     [leadIdx, setLeadIdx] = useState<number | null>(null),
     [expanded, setExpanded] = useState<string | null>(null),
     [queuePage, setQueuePage] = useState(0),
-    [query, setQuery] = useState(""),
-    [period, setPeriod] = useState("This Week");
+    [query, setQuery] = useState("");
+  const period = "This Week";
   const [callOpen, setCallOpen] = useState(false),
     [review, setReview] = useState<Call | null>(null),
     [sampleReview, setSampleReview] = useState<Lead | null>(null),
@@ -184,8 +185,8 @@ export function Workspace() {
     [followups, setFollowups] = useLocal<Followup[]>("og-followups-v1", []);
   const [reply, setReply] = useState(""),
     [chat, setChat] = useState(""),
-    [callbackDate, setCallbackDate] = useState("2026-11-09"),
-    [callbackTime, setCallbackTime] = useState("10:00"),
+    [callbackDate, setCallbackDate] = useState(""),
+    [callbackTime, setCallbackTime] = useState(""),
     [callbackNote, setCallbackNote] = useState(""),
     [callbackLanguage, setCallbackLanguage] = useState("Hindi");
   const [month, setMonth] = useState(new Date(2026, 10, 1)),
@@ -193,6 +194,13 @@ export function Workspace() {
     [kudos, setKudos] = useState(false);
   const voice = useCalls();
   const selectedLead = leadIdx === null ? null : leads[leadIdx];
+  function leadContext(lead: Lead) {
+    const draft = lead.id === "mukunda" ? voice.latest?.handoffDraft : null;
+    return draft
+      ? `${draft.language || "Customer"} callback requested${draft.date ? " for " + new Date(draft.date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : ""}${draft.time ? " at " + draft.time + " IST" : ""}.${draft.budget ? " Budget " + money(draft.budget) + "." : ""} Store confirmation pending.`
+      : lead.reason;
+  }
+
   const filtered = leads
     .filter((l) =>
       [l.name, l.product, l.stage]
@@ -215,26 +223,78 @@ export function Workspace() {
     setQueuePage(0);
   }
   function openCallback(l: Lead) {
+    const existing = followups.find((f) => f.name === l.name);
+    const draft = l.id === "mukunda" ? voice.latest?.handoffDraft : null;
     setCallback(l);
-    setCallbackLanguage(l.language);
-    setCallbackNote("");
+    setCallbackDate(existing?.date || draft?.date || "");
+    setCallbackTime(existing?.time || draft?.time || "");
+    setCallbackLanguage(existing?.language || draft?.language || l.language);
+    setCallbackNote(
+      existing?.note ||
+        (draft
+          ? [
+              draft.concern,
+              draft.budget ? `Customer budget: ${money(draft.budget)}.` : "",
+              "Store team to confirm availability.",
+            ]
+              .filter(Boolean)
+              .join(" ")
+          : ""),
+    );
   }
   function saveFollowup() {
     if (!callback || !callbackDate || !callbackTime) return;
+    const existing = followups.find((f) => f.name === callback.name);
+    const value = {
+      id: existing?.id || crypto.randomUUID(),
+      name: callback.name,
+      date: callbackDate,
+      time: callbackTime,
+      language: callbackLanguage,
+      note: callbackNote,
+      sourceCallId: callback.id === "mukunda" ? voice.latest?.id : undefined,
+    };
+    setFollowups((rows) =>
+      existing
+        ? rows.map((f) => (f.id === existing.id ? value : f))
+        : [...rows, value],
+    );
+    setCallback(null);
+    setNotice("Callback request saved. Store confirmation is pending.");
+  }
+  function savePreparedRequest(call: Call) {
+    const draft = call.handoffDraft;
+    if (!draft?.date || !draft.time || !draft.language) {
+      openCallback(leads[0]);
+      return;
+    }
+    const exists = followups.some(
+      (f) => f.sourceCallId === call.id || f.name === leads[0].name,
+    );
+    if (exists) {
+      openCallback(leads[0]);
+      return;
+    }
     setFollowups((rows) => [
       ...rows,
       {
         id: crypto.randomUUID(),
-        name: callback.name,
-        date: callbackDate,
-        time: callbackTime,
-        language: callbackLanguage,
-        note: callbackNote,
+        sourceCallId: call.id,
+        name: leads[0].name,
+        date: draft.date,
+        time: draft.time,
+        language: draft.language,
+        note: [
+          draft.concern,
+          draft.budget ? `Customer budget: ${money(draft.budget)}.` : "",
+          "Store team to confirm availability.",
+        ]
+          .filter(Boolean)
+          .join(" "),
       },
     ]);
-    setCallback(null);
     setNotice(
-      "Callback request added to your local plan. Store confirmation is pending.",
+      "Callback request saved from the call. Store confirmation is pending.",
     );
   }
   function sendMessage() {
@@ -484,21 +544,6 @@ export function Workspace() {
               <Bell size={17} />
               <span className="og-notification-dot" />
             </button>
-            <button
-              className="og-top-score"
-              onClick={() =>
-                setNotice(
-                  "OG Score 76 is sample dashboard data, not a score generated from your test call.",
-                )
-              }
-            >
-              <Target size={14} />
-              76
-            </button>
-            <button className="og-top-score" onClick={() => setKudos(true)}>
-              <Trophy size={14} />
-              #3
-            </button>
             <span className="og-avatar small">AM</span>
           </div>
         </header>
@@ -539,92 +584,63 @@ export function Workspace() {
                           : "Every call leaves context for the next conversation."}
               </p>
             </div>
-            {page === "Dashboard" ? (
-              <label className="og-period">
-                <CalendarDays size={13} />
-                <select
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                >
-                  <option>Today</option>
-                  <option>This Week</option>
-                  <option>This Month</option>
-                </select>
-              </label>
-            ) : (
-              <span className="og-badge light">8 NOV 2026</span>
-            )}
+            <span className="og-badge light">8 NOV · ON QUEUE</span>
           </div>
           {page === "Dashboard" && (
             <>
-              <div className="og-kpis">
-                {[
-                  {
-                    label: "OG Score™",
-                    value: "76",
-                    delta: "↑ 13 points",
-                    icon: Target,
-                  },
-                  {
-                    label: "Avg handle time",
-                    value: "4m 12s",
-                    delta: "↓ 8% this week",
-                    icon: Clock,
-                  },
-                  {
-                    label: "CSAT today",
-                    value: "94%",
-                    delta: "↑ 2 points",
-                    icon: Activity,
-                  },
-                  {
-                    label: "In queue",
-                    value: "2",
-                    delta: "Waiting for you",
-                    icon: Users,
-                  },
-                ].map((k) => (
-                  <div className="og-kpi" key={k.label}>
-                    <div>
-                      {k.label}
-                      <k.icon size={15} />
-                    </div>
-                    <strong>{k.value}</strong>
-                    <small>{k.delta}</small>
-                  </div>
-                ))}
+              <section className="og-focus-card">
+                <span className="og-focus-icon">
+                  <Sparkles size={20} />
+                </span>
+                <div>
+                  <span className="og-overline">YOUR NEXT STEP</span>
+                  <h2>
+                    {followups.length
+                      ? "A callback request needs store confirmation"
+                      : liveCount
+                        ? "The conversation is done. Close the loop."
+                        : "Start with the customers waiting for you."}
+                  </h2>
+                  <p>
+                    {followups.length
+                      ? `${followups[0].name} · ${followups[0].date.split("-").reverse().join("/")} · ${followups[0].time} IST · ${followups[0].language}`
+                      : liveCount
+                        ? "Review what the customer asked for. The next step is prepared from the call."
+                        : "Read the context, then choose the next action."}
+                  </p>
+                </div>
+                <button
+                  className="og-primary"
+                  onClick={() =>
+                    followups.length
+                      ? openCallback(
+                          leads.find((l) => l.name === followups[0].name) ||
+                            leads[0],
+                        )
+                      : voice.latest
+                        ? setReview(voice.latest)
+                        : go("Calls to make")
+                  }
+                >
+                  {followups.length
+                    ? "Review request"
+                    : liveCount
+                      ? "Review next step"
+                      : "Open calling plan"}
+                  <ArrowRight size={14} />
+                </button>
+              </section>
+              <div className="og-shift-line">
+                <span>Today’s progress</span>
+                <strong>3 leads created</strong>
+                <span>·</span>
+                <strong>2 leads called</strong>
+                <span className="og-shift-proof">
+                  {liveCount} live test completed
+                </span>
               </div>
               <div className="og-dashboard-grid">
                 <div>
-                  <section className="og-progress-card">
-                    <div className="og-section-title">
-                      MY PROGRESS <span>· {period.toUpperCase()}</span>
-                      <span className="og-badge light">On track</span>
-                    </div>
-                    <div className="og-progress-values">
-                      <div>
-                        <span className="og-progress-icon">
-                          <Users size={18} />
-                        </span>
-                        <strong>3</strong>
-                        <small>Leads created</small>
-                      </div>
-                      <div>
-                        <span className="og-progress-icon">
-                          <Phone size={18} />
-                        </span>
-                        <strong>2</strong>
-                        <small>Leads called</small>
-                      </div>
-                      <div>
-                        <span className="og-progress-icon">
-                          <Check size={18} />
-                        </span>
-                        <strong>{liveCount}</strong>
-                        <small>Live tests completed</small>
-                      </div>
-                    </div>
-                  </section>
                   <section className="og-card og-waiting">
                     <div className="og-section-title">
                       WHO’S WAITING
@@ -635,87 +651,176 @@ export function Workspace() {
                         Open planner <ArrowRight size={13} />
                       </button>
                     </div>
-                    {[leads[1], leads[0]].map((l, i) => (
-                      <button
-                        className="og-person-row"
-                        key={l.id}
-                        onClick={() => setLeadIdx(leads.indexOf(l))}
-                      >
-                        <Avatar lead={l} />
-                        <div>
-                          <strong>{l.name}</strong>
-                          <small>
-                            {l.stage} · {l.product}
-                          </small>
-                        </div>
-                        <span
-                          className={"og-badge " + (i === 0 ? "red" : "amber")}
+                    {leads
+                      .filter((l) => !followups.some((f) => f.name === l.name))
+                      .sort((a, b) => b.intent - a.intent)
+                      .slice(0, 2)
+                      .map((l, i) => (
+                        <button
+                          className="og-person-row"
+                          key={l.id}
+                          onClick={() => setLeadIdx(leads.indexOf(l))}
                         >
-                          {i === 0 ? "Overdue" : "Due today"}
-                        </span>
-                        <ChevronRight size={14} />
-                      </button>
-                    ))}
+                          <Avatar lead={l} />
+                          <div>
+                            <strong>{l.name}</strong>
+                            <small>
+                              {l.stage} · {l.product}
+                            </small>
+                          </div>
+                          <span
+                            className={
+                              "og-badge " + (i === 0 ? "red" : "amber")
+                            }
+                          >
+                            {i === 0 ? "Overdue" : "Due today"}
+                          </span>
+                          <ChevronRight size={14} />
+                        </button>
+                      ))}
                   </section>
                 </div>
                 <div>
-                  <section className="og-card og-earnings">
-                    <div className="og-section-title">
-                      <span>MY EARNINGS THIS MONTH</span>
-                      <Trophy size={16} />
-                    </div>
-                    <strong>₹5,200</strong>
-                    <span>₹800 to the ₹6,000 slab</span>
-                    <div className="og-meter">
-                      <i style={{ width: "86%" }} />
-                    </div>
-                    <small>₹1,700 from coached moves · sample</small>
-                  </section>
                   <section className="og-card og-tasks">
                     <div className="og-section-title">
                       MY TASKS
                       <span className="og-badge amber">
-                        {3 + followups.length}
+                        {2 + (liveCount && !followups.length ? 1 : 0)}
                       </span>
                     </div>
                     <button onClick={() => go("Incoming")}>
                       <PhoneMissed size={15} />
-                      <strong>2 callbacks</strong>
-                      <span>next 4:30 pm</span>
+                      <strong>5 missed calls</strong>
+                      <span>return a call</span>
                       <ChevronRight size={14} />
                     </button>
                     <button onClick={() => setLeadIdx(0)}>
                       <Target size={15} />
-                      <strong>2 hot leads</strong>
-                      <span>untouched 24h</span>
+                      <strong>Review allocated leads</strong>
+                      <span>context & scores</span>
                       <ChevronRight size={14} />
                     </button>
-                    <button onClick={() => go("Recent")}>
-                      <Check size={15} />
-                      <strong>
-                        {liveCount ? "Review live call" : "1 outcome"}
-                      </strong>
-                      <span>{liveCount ? "result ready" : "to log"}</span>
-                      <ChevronRight size={14} />
-                    </button>
-                    {followups.map((f) => (
-                      <button key={f.id} onClick={() => go("Calendar")}>
-                        <Clock size={15} />
-                        <strong>{f.name}</strong>
-                        <span>{f.time} · requested</span>
+                    {liveCount > 0 && !followups.length && (
+                      <button onClick={() => setReview(voice.latest!)}>
+                        <Check size={15} />
+                        <strong>Review completed call</strong>
+                        <span>next step ready</span>
                         <ChevronRight size={14} />
                       </button>
-                    ))}
+                    )}
                   </section>
                 </div>
               </div>
-              {chart("CALLS HANDLED", [18, 22, 15, 26, 20, 12, 14], "#61bea0")}
-              {chart(
-                "CSAT TREND",
-                [88, 90, 85, 92, 89, 91, 94],
-                "#8ba5ec",
-                "%",
-              )}
+              <details className="og-performance">
+                <summary>
+                  <div>
+                    <BarChart3 size={16} />
+                    <strong>Performance & earnings</strong>
+                  </div>
+                  <span>OG 76 · CSAT 94% · ₹5,200 earned</span>
+                  <ChevronDown size={16} />
+                </summary>
+                <div className="og-performance-body">
+                  {" "}
+                  <div className="og-kpis">
+                    {[
+                      {
+                        label: "OG Score™",
+                        value: "76",
+                        delta: "↑ 13 points",
+                        icon: Target,
+                      },
+                      {
+                        label: "Avg handle time",
+                        value: "4m 12s",
+                        delta: "↓ 8% this week",
+                        icon: Clock,
+                      },
+                      {
+                        label: "CSAT today",
+                        value: "94%",
+                        delta: "↑ 2 points",
+                        icon: Activity,
+                      },
+                      {
+                        label: "In queue",
+                        value: "2",
+                        delta: "Waiting for you",
+                        icon: Users,
+                      },
+                    ].map((k) => (
+                      <div className="og-kpi" key={k.label}>
+                        <div>
+                          {k.label}
+                          <k.icon size={15} />
+                        </div>
+                        <strong>{k.value}</strong>
+                        <small>{k.delta}</small>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="og-performance-grid">
+                    {" "}
+                    <section className="og-progress-card">
+                      <div className="og-section-title">
+                        MY PROGRESS <span>· {period.toUpperCase()}</span>
+                        <span className="og-badge light">On track</span>
+                      </div>
+                      <div className="og-progress-values">
+                        <div>
+                          <span className="og-progress-icon">
+                            <Users size={18} />
+                          </span>
+                          <strong>3</strong>
+                          <small>Leads created</small>
+                        </div>
+                        <div>
+                          <span className="og-progress-icon">
+                            <Phone size={18} />
+                          </span>
+                          <strong>2</strong>
+                          <small>Leads called</small>
+                        </div>
+                        <div>
+                          <span className="og-progress-icon">
+                            <Check size={18} />
+                          </span>
+                          <strong>{liveCount}</strong>
+                          <small>Live tests completed</small>
+                        </div>
+                      </div>
+                    </section>
+                    <section className="og-card og-earnings">
+                      <div className="og-section-title">
+                        <span>MY EARNINGS THIS MONTH</span>
+                        <Trophy size={16} />
+                      </div>
+                      <strong>₹5,200</strong>
+                      <span>₹800 to the ₹6,000 slab</span>
+                      <div className="og-meter">
+                        <i style={{ width: "86%" }} />
+                      </div>
+                      <small>₹1,700 from coached moves · sample</small>
+                    </section>
+                  </div>
+                  <details className="og-trends">
+                    <summary>
+                      Seven-day trends <ChevronDown size={15} />
+                    </summary>{" "}
+                    {chart(
+                      "CALLS HANDLED",
+                      [18, 22, 15, 26, 20, 12, 14],
+                      "#61bea0",
+                    )}
+                    {chart(
+                      "CSAT TREND",
+                      [88, 90, 85, 92, 89, 91, 94],
+                      "#8ba5ec",
+                      "%",
+                    )}
+                  </details>
+                </div>
+              </details>
             </>
           )}
           {(page === "Calls to make" ||
@@ -772,13 +877,16 @@ export function Workspace() {
                           <div>
                             <strong>{l.name}</strong>
                             <small>
-                              {l.product} · {money(l.value)} indicative
+                              {l.stage} · {l.product}
                             </small>
+                            <span className="og-row-reason">
+                              {leadContext(l)}
+                            </span>
                           </div>
                           <span className="og-language">{l.language}</span>
                           <span className="og-score">
                             <Target size={12} />
-                            {l.intent}
+                            <span>Intent {l.intent}</span>
                           </span>
                           <ChevronDown
                             size={15}
@@ -803,13 +911,17 @@ export function Workspace() {
                                 className="og-primary"
                                 onClick={() =>
                                   l.id === "mukunda"
-                                    ? setCallOpen(true)
+                                    ? voice.latest?.handoffDraft
+                                      ? setReview(voice.latest)
+                                      : setCallOpen(true)
                                     : openCallback(l)
                                 }
                               >
                                 <Phone size={13} />
                                 {l.id === "mukunda"
-                                  ? "AI follow-up demo"
+                                  ? voice.latest?.handoffDraft
+                                    ? "Review next step"
+                                    : "AI follow-up demo"
                                   : "Plan callback"}
                               </button>
                             </div>
@@ -1296,30 +1408,39 @@ export function Workspace() {
                 {selectedLead.stage} · {selectedLead.language}
               </span>
             </div>
-            <p className="og-lead-reason">{selectedLead.reason}</p>
-            {[
-              ["ICP fit", selectedLead.fit],
-              ["Lead intent", selectedLead.intent],
-            ].map(([label, score]) => (
-              <div className="og-fit" key={label}>
-                <div>
-                  <strong>{label}</strong>
-                  <span>
-                    {score}
-                    {label === "ICP fit" ? "%" : ""}
-                  </span>
+            <p className="og-lead-reason">{leadContext(selectedLead)}</p>
+            <details className="og-score-detail">
+              <summary>
+                Lead scores{" "}
+                <span>
+                  Fit {selectedLead.fit}% · Intent {selectedLead.intent}
+                </span>
+                <ChevronDown size={14} />
+              </summary>{" "}
+              {[
+                ["ICP fit", selectedLead.fit],
+                ["Lead intent", selectedLead.intent],
+              ].map(([label, score]) => (
+                <div className="og-fit" key={label}>
+                  <div>
+                    <strong>{label}</strong>
+                    <span>
+                      {score}
+                      {label === "ICP fit" ? "%" : ""}
+                    </span>
+                  </div>
+                  <div className="og-meter">
+                    <i
+                      style={{
+                        width: score + "%",
+                        background: label === "ICP fit" ? "#5bbd99" : "#9b7ae0",
+                      }}
+                    />
+                  </div>
                 </div>
-                <div className="og-meter">
-                  <i
-                    style={{
-                      width: score + "%",
-                      background: label === "ICP fit" ? "#5bbd99" : "#9b7ae0",
-                    }}
-                  />
-                </div>
-              </div>
-            ))}
-            <details open className="og-lead-detail">
+              ))}
+            </details>
+            <details className="og-lead-detail">
               <summary>Buying signals</summary>
               {selectedLead.signals.map((s) => (
                 <p key={s}>
@@ -1343,10 +1464,10 @@ export function Workspace() {
               </p>
             </details>
             {selectedLead.id === "mukunda" && voice.latest?.summary && (
-              <div className="og-real-result">
-                <strong>Latest live demo result</strong>
+              <details className="og-lead-detail">
+                <summary>Last call summary</summary>
                 <p>{voice.latest.summary}</p>
-              </div>
+              </details>
             )}
             <div className="og-actions">
               <button
@@ -1385,18 +1506,23 @@ export function Workspace() {
                 A shopper tried a mattress and left undecided. Ask what held
                 them back, then capture a useful next step.
               </p>
-              <div className="og-call-checklist">
-                <span>
-                  <Check size={14} /> Hindi / Hinglish first; English if
-                  requested
-                </span>
-                <span>
-                  <Check size={14} /> 90-second provider limit
-                </span>
-                <span>
-                  <Check size={14} /> No price, EMI or availability promises
-                </span>
-              </div>
+              <details className="og-call-guidance">
+                <summary>
+                  Call guidance <ChevronDown size={14} />
+                </summary>
+                <div className="og-call-checklist">
+                  <span>
+                    <Check size={14} /> Hindi / Hinglish first; English if
+                    requested
+                  </span>
+                  <span>
+                    <Check size={14} /> 90-second provider limit
+                  </span>
+                  <span>
+                    <Check size={14} /> No price, EMI or availability promises
+                  </span>
+                </div>
+              </details>
               <div className="og-call-target">
                 <span>Authorized test phone</span>
                 <strong>{voice.config?.recipient || "Not configured"}</strong>
@@ -1441,21 +1567,30 @@ export function Workspace() {
                   <h2 aria-live="polite">
                     {callLabels[voice.latest.status] || voice.latest.status}
                   </h2>
-                  <ol className="og-call-timeline">
-                    {voice.latest.events.map((e, i) => (
-                      <li key={i}>
-                        <span>{callLabels[e.status] || e.status}</span>
-                        <time>
-                          {new Date(e.at).toLocaleTimeString("en-IN", {
-                            timeZone: "Asia/Kolkata",
-                            hour: "numeric",
-                            minute: "2-digit",
-                            second: "2-digit",
-                          })}
-                        </time>
-                      </li>
-                    ))}
-                  </ol>
+                  <details
+                    className="og-call-status-detail"
+                    open={!terminal.has(voice.latest.status)}
+                    key={voice.latest.id + terminal.has(voice.latest.status)}
+                  >
+                    <summary>
+                      Call activity <ChevronDown size={14} />
+                    </summary>
+                    <ol className="og-call-timeline">
+                      {voice.latest.events.map((e, i) => (
+                        <li key={i}>
+                          <span>{callLabels[e.status] || e.status}</span>
+                          <time>
+                            {new Date(e.at).toLocaleTimeString("en-IN", {
+                              timeZone: "Asia/Kolkata",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
+                          </time>
+                        </li>
+                      ))}
+                    </ol>
+                  </details>
                   {voice.latest.summary && (
                     <>
                       <h3>Provider summary</h3>
@@ -1467,7 +1602,7 @@ export function Workspace() {
                           setReview(voice.latest!);
                         }}
                       >
-                        Review transcript <ArrowRight size={13} />
+                        Review next step <ArrowRight size={13} />
                       </button>
                     </>
                   )}
@@ -1497,27 +1632,96 @@ export function Workspace() {
               </div>
               <span className="og-badge green">Live test</span>
             </div>
-            <div className="og-review-summary">
-              <span className="og-overline">
-                <Sparkles size={13} /> PROVIDER SUMMARY
-              </span>
-              <p>
-                {review.summary ||
-                  "The provider has not returned a finalized summary."}
-              </p>
-              <div className="og-actions">
+            {review.handoffDraft ? (
+              <div className="og-next-action-card">
+                <div className="og-section-title">
+                  <Sparkles size={15} /> NEXT STEP, PREPARED
+                </div>
+                <h2>Ask the store to call back</h2>
+                <div className="og-handoff-facts">
+                  <span>
+                    <CalendarDays size={14} />
+                    {review.handoffDraft.date
+                      ? new Date(
+                          review.handoffDraft.date + "T00:00:00",
+                        ).toLocaleDateString("en-IN", {
+                          day: "numeric",
+                          month: "long",
+                        })
+                      : "Date needed"}
+                  </span>
+                  <span>
+                    <Clock size={14} />
+                    {review.handoffDraft.time || "Time needed"} IST
+                  </span>
+                  <span>
+                    <MessageSquare size={14} />
+                    {review.handoffDraft.language || "Language needed"}
+                  </span>
+                </div>
+                <p>
+                  {review.handoffDraft.concern}
+                  {review.handoffDraft.budget
+                    ? ` Customer budget: ${money(review.handoffDraft.budget)}.`
+                    : ""}
+                </p>
+                <div className="og-actions">
+                  <button
+                    className="og-primary"
+                    onClick={() => savePreparedRequest(review)}
+                  >
+                    {followups.some(
+                      (f) =>
+                        f.sourceCallId === review.id ||
+                        f.name === leads[0].name,
+                    )
+                      ? "Review saved request"
+                      : review.handoffDraft.date &&
+                          review.handoffDraft.time &&
+                          review.handoffDraft.language
+                        ? "Save callback request"
+                        : "Complete request"}
+                    <ArrowRight size={14} />
+                  </button>
+                  {!followups.some(
+                    (f) =>
+                      f.sourceCallId === review.id || f.name === leads[0].name,
+                  ) && (
+                    <button
+                      className="og-secondary"
+                      onClick={() => openCallback(leads[0])}
+                    >
+                      Edit details
+                    </button>
+                  )}
+                  <span className="og-footnote">
+                    Suggested from the conversation. Store confirms
+                    availability.
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="og-review-summary">
+                <span className="og-overline">NEXT STEP</span>
+                <p>
+                  {review.summary ||
+                    "The provider has not returned a finalized summary."}
+                </p>
                 <button
                   className="og-primary"
                   onClick={() => openCallback(leads[0])}
                 >
-                  <CalendarDays size={14} />
-                  Create callback request
+                  Plan callback
                 </button>
-                <span className="og-footnote">
-                  Review details before adding to your plan.
-                </span>
               </div>
-            </div>
+            )}
+            <details className="og-summary-detail">
+              <summary>
+                Full call summary
+                <ChevronDown size={15} />
+              </summary>
+              <p>{review.summary || "Summary pending."}</p>
+            </details>
             <details className="og-provider-details">
               <summary>Call evidence</summary>
               <dl>
@@ -1533,27 +1737,32 @@ export function Workspace() {
                 <dd>{review.terminationReason || "Pending"}</dd>
               </dl>
             </details>
-            <h3>Conversation transcript</h3>
-            <div className="og-transcript">
-              {review.transcript ? (
-                review.transcript
-                  .split("\n")
-                  .filter(Boolean)
-                  .map((line, i) => (
-                    <div
-                      className={line.startsWith("user:") ? "customer" : ""}
-                      key={i}
-                    >
-                      <strong>
-                        {line.startsWith("user:") ? "Customer" : "Avani"}
-                      </strong>
-                      <p>{line.replace(/^(assistant|user):\s*/, "")}</p>
-                    </div>
-                  ))
-              ) : (
-                <p>Transcript pending.</p>
-              )}
-            </div>
+            <details className="og-transcript-detail">
+              <summary>
+                Conversation transcript <span>Original conversation</span>
+                <ChevronDown size={15} />
+              </summary>
+              <div className="og-transcript">
+                {review.transcript ? (
+                  review.transcript
+                    .split("\n")
+                    .filter(Boolean)
+                    .map((line, i) => (
+                      <div
+                        className={line.startsWith("user:") ? "customer" : ""}
+                        key={i}
+                      >
+                        <strong>
+                          {line.startsWith("user:") ? "Customer" : "Avani"}
+                        </strong>
+                        <p>{line.replace(/^(assistant|user):\s*/, "")}</p>
+                      </div>
+                    ))
+                ) : (
+                  <p>Transcript pending.</p>
+                )}
+              </div>
+            </details>
           </div>
         </Dialog>
       )}
@@ -1586,7 +1795,7 @@ export function Workspace() {
         </Dialog>
       )}
       {callback && (
-        <Dialog title="Plan a callback" onClose={() => setCallback(null)}>
+        <Dialog title="Callback request" onClose={() => setCallback(null)}>
           <form
             className="og-dialog-body og-callback-form"
             onSubmit={(e) => {
@@ -1595,61 +1804,101 @@ export function Workspace() {
             }}
           >
             <h2>{callback.name}</h2>
-            <p>
-              Capture the requested time. Store availability still needs
-              confirmation.
+            <p>Review the request, then pass it to the store.</p>
+            {callbackDate && callbackTime && (
+              <div className="og-prepared-request">
+                <span className="og-overline">
+                  {followups.some((f) => f.name === callback.name)
+                    ? "SAVED REQUEST · CONFIRMATION PENDING"
+                    : "SUGGESTED FROM THE CALL"}
+                </span>
+                <strong>
+                  {new Date(callbackDate + "T00:00:00").toLocaleDateString(
+                    "en-IN",
+                    { day: "numeric", month: "long" },
+                  )}{" "}
+                  · {callbackTime} IST
+                </strong>
+                <span>{callbackLanguage} · staff callback</span>
+                <p>{callbackNote}</p>
+              </div>
+            )}
+            <details
+              className="og-edit-fields"
+              open={!callbackDate || !callbackTime}
+              key={callback.id}
+            >
+              <summary>
+                {callbackDate && callbackTime
+                  ? "Edit request details"
+                  : "Complete missing details"}
+                <ChevronDown size={15} />
+              </summary>
+              <label>
+                Date
+                <input
+                  type="date"
+                  min="2026-11-08"
+                  required
+                  value={callbackDate}
+                  onChange={(e) => setCallbackDate(e.target.value)}
+                />
+              </label>
+              <label>
+                Time · IST
+                <input
+                  type="time"
+                  required
+                  value={callbackTime}
+                  onChange={(e) => setCallbackTime(e.target.value)}
+                />
+              </label>
+              <label>
+                Language
+                <select
+                  value={callbackLanguage}
+                  onChange={(e) => setCallbackLanguage(e.target.value)}
+                >
+                  {[
+                    "Hindi",
+                    "English",
+                    "Kannada",
+                    "Tamil",
+                    "Telugu",
+                    "Other",
+                  ].map((l) => (
+                    <option key={l}>{l}</option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Context for store staff
+                <textarea
+                  value={callbackNote}
+                  onChange={(e) => setCallbackNote(e.target.value)}
+                  placeholder="Customer’s question, budget or anything to check…"
+                />
+              </label>
+            </details>
+            {callback.id === "mukunda" &&
+              voice.latest?.handoffDraft?.evidence && (
+                <details className="og-lead-detail">
+                  <summary>What the customer said</summary>
+                  {voice.latest.handoffDraft.evidence.map((line, i) => (
+                    <p lang="hi" key={i}>
+                      {line}
+                    </p>
+                  ))}
+                </details>
+              )}
+            <p className="og-footnote">
+              Saves a local callback request. Store confirmation is still
+              needed; no call or invitation is sent.
             </p>
-            <label>
-              Date
-              <input
-                type="date"
-                min="2026-11-08"
-                required
-                value={callbackDate}
-                onChange={(e) => setCallbackDate(e.target.value)}
-              />
-            </label>
-            <label>
-              Time · IST
-              <input
-                type="time"
-                required
-                value={callbackTime}
-                onChange={(e) => setCallbackTime(e.target.value)}
-              />
-            </label>
-            <label>
-              Language
-              <select
-                value={callbackLanguage}
-                onChange={(e) => setCallbackLanguage(e.target.value)}
-              >
-                {[
-                  "Hindi",
-                  "English",
-                  "Kannada",
-                  "Tamil",
-                  "Telugu",
-                  "Other",
-                ].map((l) => (
-                  <option key={l}>{l}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Context for store staff
-              <textarea
-                value={callbackNote}
-                onChange={(e) => setCallbackNote(e.target.value)}
-                placeholder="Customer’s question, budget or anything to check…"
-              />
-            </label>
-            <div className="og-warning">
-              Saved to this demo’s local plan. This does not schedule a provider
-              call or send a calendar invitation.
-            </div>
             <button className="og-primary" type="submit">
-              Save callback request
+              {followups.some((f) => f.name === callback.name)
+                ? "Save changes"
+                : "Save callback request"}
             </button>
           </form>
         </Dialog>

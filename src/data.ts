@@ -130,6 +130,16 @@ export const money = (n: number) =>
     currency: "INR",
     maximumFractionDigits: 0,
   }).format(n);
+export type HandoffDraft = {
+  sourceCallId: string;
+  date: string;
+  time: string;
+  language: string;
+  budget: number | null;
+  concern: string;
+  evidence: string[];
+  state: "suggested";
+};
 export type Call = {
   id: string;
   status: string;
@@ -140,6 +150,7 @@ export type Call = {
   transcript?: string;
   summary?: string;
   terminationReason?: string;
+  handoffDraft?: HandoffDraft | null;
   error?: string;
   events: { status: string; at: string }[];
 };

@@ -27,3 +27,9 @@ A managed voice platform reduces telephony setup time, but voice quality and cal
 ## Next validation
 
 Test interrupting, declining a call, asking an unsupported policy question, switching languages and no-answer handling. Use consenting test participants. Measure whether the recorded next action matches what they said. Do not report model accuracy or business impact from one call.
+
+## The design contribution
+
+The app preserves the assignment’s required screens but shifts prominence to the work. AI extracts the requested next step from the actual call. The agent sees the suggested callback details before the transcript and can save a complete request directly. Editing and supporting evidence are secondary. No booking is claimed until a store confirms it. Required performance cards/charts are accessible on expansion. Explain the deliberate tradeoff against strict screenshot matching.
+
+An observed model failure shaped the design: the extraction returned transliterated text while claiming exact quotes. Evidence now comes directly from the transcript rather than generated quotations. This is a concrete trust decision, not a generic “human in the loop” claim.

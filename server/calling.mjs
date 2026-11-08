@@ -7,6 +7,7 @@ import {
   renameSync,
 } from "node:fs";
 import { join } from "node:path";
+import { normalizeHandoff } from "./handoff.mjs";
 
 export const TERMINAL = new Set([
   "completed",
@@ -165,6 +166,7 @@ export class CallingService {
         typeof result.transcript === "string" ? result.transcript : null;
       call.summary = typeof result.summary === "string" ? result.summary : null;
       call.terminationReason = result.termination_reason ?? null;
+      call.handoffDraft = normalizeHandoff(result.extracted_data, call);
     }
     this.save();
     return call;

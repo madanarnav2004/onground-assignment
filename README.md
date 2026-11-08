@@ -44,6 +44,9 @@ API references: https://www.bolna.ai/docs/api-reference/calls/make and https://w
 
 ## Product rationale
 
+The visual review puts the next action before passive metrics. Required dashboard panels and charts remain available in expansions. Completed call review now offers a model-prepared callback request; valid complete drafts can be saved without re-entering four fields. Editing, original transcript and evidence remain on demand. See `docs/DESIGN_REVIEW.md` for the rationale, assignment constraint map and observed extraction failure.
+
+
 The demo focuses on walk-out recovery: understand one obstacle, capture the customer's preferred next step and preserve context for store staff. See `docs/PRODUCT.md` for Indian retail research, evidence limitations and decisions. `docs/EXPLAIN.md` supports the technical/product discussion.
 
 ## Local boundaries and remaining work
@@ -53,15 +56,15 @@ The demo focuses on walk-out recovery: understand one obstacle, capture the cust
 - Store prices, scores, KPIs, earnings and historical calls are sample data. No scoring model, commerce catalogue, mailbox or CRM is connected.
 - Agent entries in Pulse open sample conversations; only the walk-out recovery telephone agent is implemented.
 - The operator interface has no live-call hangup control. The recipient can hang up, and Bolna applies the 90-second limit.
-- Practice-call screen, real inbound telephony, human-to-human calling and provider extraction fields remain outside the current implementation.
+- Practice-call screen, real inbound telephony and human-to-human calling remain outside the current implementation. Structured provider extraction is configured and was tested on the completed call; general extraction quality remains unestablished.
 - Hosted deployment, GitHub publication and up-to-two-minute submission recording remain pending user review. Nothing has been submitted.
 
 ## Validation
 
-Five provider-boundary tests pass: disabled calling, duplicate/restarted request reuse, uncertain-send redial protection, finalized result handling and attempt caps. TypeScript and production compilation pass. Manual browser checks covered all required screens, lead/queue paging, row expansion, the live transcript, callback creation and reload persistence, calendar month/Today controls, channel messages and pinned responses. Laptop layout checked at 1440×1000; phone navigation checked at 390×844 with no horizontal overflow. No browser console errors were observed during that review. Full hosted acceptance remains open.
+Nine server tests pass. Four validate the prepared handoff and five validate calling: disabled calling, duplicate/restarted request reuse, uncertain-send redial protection, finalized result handling and attempt caps. TypeScript and production compilation pass. Manual browser checks covered all required screens, lead/queue paging, row expansion, the live transcript, callback creation and reload persistence, calendar month/Today controls, channel messages and pinned responses. Laptop layout checked at 1440×1000; phone navigation checked at 390×844 with no horizontal overflow. No browser console errors were observed during that review. Full hosted acceptance remains open.
 
 ## AI assistance and Git history
 
-OpenAI Codex assisted research, product scoping, original implementation and tests. The reference HTML is a visual/behavioural specification; its implementation is not copied into this repository. Arnav selected the recovery scenario, reviewed the opening, participated in the telephone test and provided voice-quality feedback. Git records incremental work. He should be able to explain the calling boundary, state lifecycle, sample-data choices and local persistence limitations.
+OpenAI Codex assisted research, product scoping, original implementation and tests. The reference HTML is a visual/behavioural specification; its implementation is not copied into this repository. Arnav selected the recovery scenario, reviewed the opening, participated in the telephone test, provided voice-quality feedback, and directed the agent-first design refinement: remove UI/work where possible within the required screens. Git records incremental work. He should be able to explain the calling boundary, state lifecycle, sample-data choices and local persistence limitations.
 
 Submission details from the brief: sales@on-ground.ai; subject `Assignment Submission: Arnav Madan`; deadline 9 November 2026 at 01:44:22 IST.
