@@ -159,6 +159,24 @@ const initialMessages: Message[] = [
     mine: true,
   },
 ];
+function storeCalendarDate(date = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Kolkata",
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date);
+  const part = (name: string) =>
+    Number(parts.find((entry) => entry.type === name)?.value);
+  return { year: part("year"), month: part("month"), day: part("day") };
+}
+const sampleCalendarDates = new Set([
+  "2026-11-09",
+  "2026-11-12",
+  "2026-11-18",
+  "2026-11-23",
+]);
+
 export function Workspace() {
   const [page, setPage] = useState<Page>("Dashboard"),
     [leadIdx, setLeadIdx] = useState<number | null>(null),
@@ -186,10 +204,11 @@ export function Workspace() {
     [callbackTime, setCallbackTime] = useState(""),
     [callbackNote, setCallbackNote] = useState(""),
     [callbackLanguage, setCallbackLanguage] = useState("Hindi");
+  const [calendarStart] = useState(storeCalendarDate);
   const [month, setMonth] = useState(
-      () => new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+      () => new Date(calendarStart.year, calendarStart.month - 1, 1),
     ),
-    [day, setDay] = useState(() => new Date().getDate()),
+    [day, setDay] = useState(calendarStart.day),
     [kudos, setKudos] = useState(false);
   const voice = useCalls();
   const selectedLead = leadIdx === null ? null : leads[leadIdx];
@@ -385,7 +404,15 @@ export function Workspace() {
   function calendar() {
     const first = new Date(month.getFullYear(), month.getMonth(), 1).getDay(),
       count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-    const dateKey = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const keyForDay = (n: number) =>
+      `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(n).padStart(2, "0")}`;
+    const dateKey = keyForDay(day);
+    const hasSampleEvent = (n: number) => sampleCalendarDates.has(keyForDay(n));
+    const today = storeCalendarDate();
+    const isToday = (n: number) =>
+      n === today.day &&
+      month.getMonth() === today.month - 1 &&
+      month.getFullYear() === today.year;
     const items = followups.filter((f) => f.date === dateKey);
     return (
       <div className="og-calendar-wrap">
@@ -424,9 +451,9 @@ export function Workspace() {
             <button
               className="og-secondary"
               onClick={() => {
-                const today = new Date();
-                setMonth(new Date(today.getFullYear(), today.getMonth(), 1));
-                setDay(today.getDate());
+                const today = storeCalendarDate();
+                setMonth(new Date(today.year, today.month - 1, 1));
+                setDay(today.day);
               }}
             >
               Today
@@ -444,24 +471,16 @@ export function Workspace() {
             {Array.from({ length: count }, (_, i) => {
               const n = i + 1;
               const has =
-                followups.some(
-                  (f) =>
-                    f.date ===
-                    `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-${String(n).padStart(2, "0")}`,
-                ) ||
-                (month.getMonth() === 10 && [9, 12, 18, 23].includes(n));
+                followups.some((f) => f.date === keyForDay(n)) ||
+                hasSampleEvent(n);
               return (
                 <button
                   key={n}
                   className={
-                    (day === n ? "selected " : "") +
-                    (n === 8 &&
-                    month.getMonth() === 10 &&
-                    month.getFullYear() === 2026
-                      ? "today"
-                      : "")
+                    (day === n ? "selected " : "") + (isToday(n) ? "today" : "")
                   }
                   aria-label={`Select ${n} ${month.toLocaleDateString("en-IN", { month: "long", year: "numeric" })}`}
+                  aria-current={isToday(n) ? "date" : undefined}
                   onClick={() => setDay(n)}
                 >
                   {n}
@@ -484,14 +503,14 @@ export function Workspace() {
               {f.note && <p>{f.note}</p>}
             </div>
           ))}
-          {month.getMonth() === 10 && [9, 12, 18, 23].includes(day) && (
+          {hasSampleEvent(day) && (
             <div className="og-agenda-item">
               <span>4:30 pm IST · sample event</span>
               <strong>Team coaching</strong>
               <p>Objection handling with Sunita Rao</p>
             </div>
           )}
-          {!items.length && ![9, 12, 18, 23].includes(day) && (
+          {!items.length && !hasSampleEvent(day) && (
             <p className="og-muted">No events for this date.</p>
           )}
           <p className="og-footnote">

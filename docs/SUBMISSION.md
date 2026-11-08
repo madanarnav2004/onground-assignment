@@ -12,7 +12,7 @@ Source: Rashmi Sehgal’s email, **“Your On-Ground.ai engineering assignment�
 
 Nothing in this file indicates that an email has been sent.
 
-## Links to finalize after release checks
+## Final links
 
 | Item      | Final link                                            | Acceptance evidence required                                                                   |
 | --------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------- |

@@ -1,0 +1,60 @@
+{
+  "checkedAt": "2026-11-08T15:38:20.819149+00:00",
+  "requestAuthentication": "No Authorization header, browser cookie or owner login used for HTTP checks",
+  "github": {
+    "repositoryUrl": "https://github.com/madanarnav2004/onground-assignment",
+    "htmlStatus": 200,
+    "metadataStatus": 200,
+    "private": false,
+    "defaultBranch": "codex/onground-calling",
+    "defaultBranchReadmeStatus": 200
+  },
+  "application": {
+    "url": "https://onground-arnav.vercel.app",
+    "status": 200,
+    "apiConfigStatus": 200,
+    "apiJSONParsed": true
+  },
+  "video": {
+    "url": "https://onground-arnav.vercel.app/submission.mp4",
+    "status": 200,
+    "contentType": "video/mp4",
+    "sha256": "3b64310b8bb174f88693531c1dd2c206b07a44e2b515222a2882cdb63322bc4b",
+    "matchesLocal": true,
+    "durationSeconds": 109.8,
+    "underTwoMinutes": true,
+    "streams": [
+      {
+        "codec_name": "h264",
+        "codec_type": "video",
+        "width": 1920,
+        "height": 1080
+      },
+      {
+        "codec_name": "aac",
+        "codec_type": "audio"
+      }
+    ]
+  },
+  "git": {
+    "localHead": "43c3d03a0c2eb55c0145f8df08e5c7b78181a536",
+    "remoteDefaultBranchHead": "43c3d03a0c2eb55c0145f8df08e5c7b78181a536",
+    "headsMatch": true,
+    "workingTreeChangesDuringCheck": []
+  },
+  "submission": {
+    "instructionsFile": "docs/SUBMISSION.md",
+    "recipient": "sales@on-ground.ai",
+    "subject": "Assignment Submission: Arnav Madan",
+    "emailSent": false,
+    "pdfDeliveryInstructionsVerified": true,
+    "sourcePDF": "OnGround_Engineering_Assignment.pdf",
+    "recordingLimitSeconds": 120,
+    "deadlineIST": "2026-11-09T01:44:22+05:30",
+    "recipientAndSubjectMatchPreparedCopy": true
+  },
+  "limitations": [
+    "Media stream presence and file identity checked; this check does not replace viewing and listening to the recording.",
+    "Parent is updating final human-authored package copy; any subsequent source changes need a final push."
+  ]
+}
